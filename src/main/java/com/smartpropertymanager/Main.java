@@ -45,6 +45,10 @@ public class Main extends Application {
 
         primaryStage.setTitle("Smart Property Manager Pro");
         primaryStage.setScene(scene);
+        primaryStage.setResizable(true);
+        primaryStage.setMaximized(false);
+        primaryStage.setFullScreen(false);
+        primaryStage.setOnCloseRequest(e -> System.exit(0));
         primaryStage.show();
     }
 
@@ -147,6 +151,13 @@ public class Main extends Application {
         userName.setStyle("-fx-font-size: 12; -fx-text-fill: #333333;");
         userProfile.getChildren().addAll(userCircle, userName);
         header.getChildren().add(userProfile);
+
+        // Close button
+        Button closeBtn = new Button("✕");
+        closeBtn.setStyle("-fx-padding: 8 12; -fx-font-size: 16; -fx-background-color: #ff4444; -fx-text-fill: white; -fx-border-radius: 4;");
+        closeBtn.setCursor(javafx.scene.Cursor.HAND);
+        closeBtn.setOnAction(e -> System.exit(0));
+        header.getChildren().add(closeBtn);
 
         return header;
     }
