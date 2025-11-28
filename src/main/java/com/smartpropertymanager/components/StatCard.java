@@ -4,51 +4,75 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.paint.CycleMethod;
 
 public class StatCard extends HBox {
-    public StatCard(String title, String value, String trend, String icon, String backgroundColor) {
-        setPrefWidth(280);
-        setPrefHeight(120);
-        setPadding(new Insets(20));
-        setSpacing(15);
-        setStyle("-fx-background-color: white; -fx-border-radius: 12; -fx-border-color: #EEEEEE;");
+
+    // New full constructor used by DashboardContent
+    public StatCard(String title, String value, String change, String trend, String iconEmoji, String startColor, String endColor) {
+        init(title, value, change, trend, iconEmoji, startColor, endColor);
+    }
+
+    // Backwards-compatible constructor used elsewhere (no gradient end color)
+    public StatCard(String title, String value, String change, String iconEmoji, String startColor) {
+        init(title, value, change, "up", iconEmoji, startColor, startColor);
+    }
+
+    private void init(String title, String value, String change, String trend, String iconEmoji, String startColor, String endColor) {
+        setPrefWidth(200);
+        setPrefHeight(100);
+        setPadding(new Insets(16));
+        setSpacing(12);
         setAlignment(Pos.CENTER_LEFT);
-        setCursor(javafx.scene.Cursor.HAND);
+        setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #E5E7EB; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.06), 10, 0, 0, 4);");
 
-        // Left section: Title and metrics
-        VBox leftSection = new VBox(8);
-        leftSection.setSpacing(8);
-
+        VBox left = new VBox(6);
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666666;");
+        titleLabel.setFont(Font.font(13));
+        titleLabel.setStyle("-fx-text-fill: #6B7280;");
 
-        HBox metricsBox = new HBox(8);
+        HBox valueRow = new HBox(8);
+        valueRow.setAlignment(Pos.CENTER_LEFT);
         Label valueLabel = new Label(value);
-        valueLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        valueLabel.setFont(Font.font("System", FontWeight.BOLD, 20));
+        valueLabel.setStyle("-fx-text-fill: #000000;");
 
-        Label arrowLabel = new Label("📈");
-        Label trendLabel = new Label(trend);
-        trendLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #10B981; -fx-font-weight: bold;");
+        Label changeLabel = new Label(change);
+        changeLabel.setFont(Font.font(12));
+        changeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + ("up".equals(trend) ? "#10B981" : "#EF4444") + ";");
 
-        metricsBox.getChildren().addAll(valueLabel, arrowLabel, trendLabel);
-        leftSection.getChildren().addAll(titleLabel, metricsBox);
+        valueRow.getChildren().addAll(valueLabel, changeLabel);
+        left.getChildren().addAll(titleLabel, valueRow);
 
-        // Right section: Icon
-        Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 48; -fx-padding: 10;");
-        VBox iconBox = new VBox();
-        iconBox.setPrefWidth(80);
-        iconBox.setAlignment(Pos.CENTER);
-        iconBox.setStyle("-fx-background-color: " + backgroundColor + "; -fx-border-radius: 12;");
-        iconBox.getChildren().add(iconLabel);
+        // Icon with gradient background
+        Rectangle rect = new Rectangle(44, 44);
+        rect.setArcWidth(10);
+        rect.setArcHeight(10);
+        LinearGradient lg = new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web(startColor)), new Stop(1, Color.web(endColor)));
+        rect.setFill(lg);
 
-        HBox.setHgrow(leftSection, javafx.scene.layout.Priority.ALWAYS);
-        getChildren().addAll(leftSection, iconBox);
+        Label icon = new Label(iconEmoji);
+        icon.setFont(Font.font(18));
+        icon.setStyle("-fx-text-fill: white;");
 
-        // Hover effect
-        setOnMouseEntered(e -> setStyle("-fx-background-color: #FAFAFA; -fx-border-radius: 12; -fx-border-color: #E0E0E0;"));
-        setOnMouseExited(e -> setStyle("-fx-background-color: white; -fx-border-radius: 12; -fx-border-color: #EEEEEE;"));
+        StackPane iconContainer = new StackPane(rect, icon);
+        iconContainer.setAlignment(Pos.CENTER);
+
+        getChildren().addAll(left, iconContainer);
+        HBox.setHgrow(left, Priority.ALWAYS);
+
+        // Hover
+        setOnMouseEntered(e -> setStyle("-fx-background-color: linear-gradient(to bottom right, rgba(255,255,255,0.98), rgba(255,255,255,0.95)); -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #D1D5DB; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.12), 18, 0, 0, 6);"));
+        setOnMouseExited(e -> setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #E5E7EB; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.06), 10, 0, 0, 4);"));
     }
 }

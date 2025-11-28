@@ -25,9 +25,9 @@ public class Sidebar {
 
         // Menu items - Store references to enable active state switching
         HBox dashboardItem = createMenuItem("🏠", "Dashboard", true);
-        HBox buildingsItem = createMenuItem("🏢", "Buildings", false);
-        HBox buyersItem = createMenuItemWithBadge("👥", "Buyers", false, "3");
-        HBox landsItem = createMenuItem("🏞️", "Lands", false);
+        HBox buildingsItem = createMenuItem("🏢", "Building Management", false);
+        HBox buyersItem = createMenuItemWithBadge("👥", "Buyer Management", false, "5");
+        HBox landsItem = createMenuItem("🏞️", "Land Management", false);
         HBox permitsItem = createMenuItemWithBadge("📋", "Permits", false, "2");
         HBox maintenanceItem = createMenuItemWithBadge("🔧", "Maintenance", false, "5");
         HBox reportsItem = createMenuItem("📊", "Reports", false);

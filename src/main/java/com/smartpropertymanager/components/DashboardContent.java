@@ -1,92 +1,119 @@
 package com.smartpropertymanager.components;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public class DashboardContent {
     private VBox root;
 
     public DashboardContent() {
         root = new VBox();
-        root.setPadding(new Insets(30));
-        root.setSpacing(25);
-        root.setStyle("-fx-background-color: #F5F5F5;");
+        root.setPadding(new Insets(24));
+        root.setSpacing(24);
+        root.setStyle("-fx-background-color: #F8FAFC;");
 
-        // Title and welcome message
+        // Header
         Label title = new Label("Dashboard Overview");
-        title.setStyle("-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        title.setFont(Font.font("System", FontWeight.BOLD, 28));
+        title.setStyle("-fx-text-fill: #000000;");
 
-        Label welcomeMsg = new Label("Welcome back! Here's what's happening with your properties.");
-        welcomeMsg.setStyle("-fx-font-size: 14; -fx-text-fill: #666666;");
+        Label subtitle = new Label("Welcome back! Here's what's happening with your properties.");
+        subtitle.setFont(Font.font(14));
+        subtitle.setStyle("-fx-text-fill: #6B7280;");
 
-        VBox headerSection = new VBox(5);
-        headerSection.getChildren().addAll(title, welcomeMsg);
-        root.getChildren().add(headerSection);
+        VBox header = new VBox(6, title, subtitle);
+        root.getChildren().add(header);
 
-        // Stat cards
-        HBox statCardsBox = new HBox(20);
-        statCardsBox.setStyle("-fx-background-color: #F5F5F5;");
-        statCardsBox.getChildren().addAll(
-                new StatCard("Total Buildings", "24", "+2", "📊", "#1E40AF"),
-                new StatCard("Total Properties", "156", "+8", "📋", "#10B981"),
-                new StatCard("Total Buyers", "142", "+5", "👥", "#F59E0B"),
-                new StatCard("Land Properties", "8", "+1", "🏞️", "#8B5CF6")
-        );
-        root.getChildren().add(statCardsBox);
+        // Stats grid (4 columns)
+        HBox statsRow = new HBox(20);
+        statsRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Charts section
-        HBox chartsBox = new HBox(20);
-        chartsBox.setPrefHeight(400);
+        StatCard s1 = new StatCard("Total Buildings", "24", "+2", "up", "🏢", "#2C3E8C", "#4FD1C5");
+        StatCard s2 = new StatCard("Total Properties", "156", "+8", "up", "📋", "#4FD1C5", "#8B5CF6");
+        StatCard s3 = new StatCard("Total Buyers", "142", "+5", "up", "👥", "#F5C542", "#F59E0B");
+        StatCard s4 = new StatCard("Land Properties", "8", "+1", "up", "🏞️", "#8B5CF6", "#2C3E8C");
 
-        // Revenue & Expenses chart
-        VBox revenueChart = createRevenueChart();
-        HBox.setHgrow(revenueChart, javafx.scene.layout.Priority.ALWAYS);
-        chartsBox.getChildren().add(revenueChart);
+        s1.setPrefSize(200, 100);
+        s2.setPrefSize(200, 100);
+        s3.setPrefSize(200, 100);
+        s4.setPrefSize(200, 100);
 
-        // Occupancy Rate chart
-        VBox occupancyChart = createOccupancyChart();
-        HBox.setHgrow(occupancyChart, javafx.scene.layout.Priority.ALWAYS);
-        chartsBox.getChildren().add(occupancyChart);
+        statsRow.getChildren().addAll(s1, s2, s3, s4);
+        root.getChildren().add(statsRow);
 
-        root.getChildren().add(chartsBox);
+        // Charts section - 2/3 and 1/3 split
+        HBox charts = new HBox(20);
+
+        VBox revenueBox = createRevenueBox();
+        VBox occupancyBox = createOccupancyBox();
+
+        HBox.setHgrow(revenueBox, Priority.ALWAYS);
+        HBox.setHgrow(occupancyBox, Priority.NEVER);
+
+        // Bind widths for responsive split
+        revenueBox.prefWidthProperty().bind(root.widthProperty().subtract(48).multiply(0.66));
+        occupancyBox.prefWidthProperty().bind(root.widthProperty().subtract(48).multiply(0.34));
+
+        charts.getChildren().addAll(revenueBox, occupancyBox);
+        root.getChildren().add(charts);
+
+        // Bottom row: Activities and Tasks (equal split)
+        HBox bottom = new HBox(20);
+        VBox activities = createActivitiesPanel();
+        VBox tasks = createTasksPanel();
+
+        HBox.setHgrow(activities, Priority.ALWAYS);
+        HBox.setHgrow(tasks, Priority.ALWAYS);
+
+        bottom.getChildren().addAll(activities, tasks);
+        root.getChildren().add(bottom);
     }
 
-    private VBox createRevenueChart() {
-        VBox chartContainer = new VBox();
-        chartContainer.setPadding(new Insets(20));
-        chartContainer.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #EEEEEE;");
-        chartContainer.setSpacing(15);
+    private VBox createRevenueBox() {
+        VBox container = new VBox(12);
+        container.setPadding(new Insets(20));
+        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
 
-        Label chartTitle = new Label("Revenue & Expenses");
-        chartTitle.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        Label title = new Label("Revenue & Expenses");
+        title.setFont(Font.font("System", FontWeight.BOLD, 16));
+        title.setStyle("-fx-text-fill: #000000;");
 
         CategoryAxis xAxis = new CategoryAxis();
-        xAxis.setCategories(javafx.collections.FXCollections.observableArrayList(
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun"
-        ));
-        xAxis.setStyle("-fx-text-fill: #666666;");
+        xAxis.setCategories(javafx.collections.FXCollections.observableArrayList("Jan", "Feb", "Mar", "Apr", "May", "Jun"));
+        xAxis.setTickLabelFill(Color.web("#6B7280"));
 
         NumberAxis yAxis = new NumberAxis(0, 10000000, 2500000);
-        yAxis.setStyle("-fx-text-fill: #666666;");
+        yAxis.setTickLabelFill(Color.web("#6B7280"));
 
-        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setStyle("-fx-background-color: white;");
-        barChart.setLegendVisible(false);
-        barChart.setPrefHeight(300);
+        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
+        chart.setLegendVisible(true);
+        chart.setAnimated(false);
+        chart.setCategoryGap(16);
+        chart.setBarGap(6);
+        chart.setPrefHeight(300);
 
-        XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
-        revenueSeries.setName("Revenue");
-        revenueSeries.getData().addAll(
+        XYChart.Series<String, Number> rev = new XYChart.Series<>();
+        rev.setName("Revenue");
+        rev.getData().addAll(
                 new XYChart.Data<>("Jan", 4500000),
                 new XYChart.Data<>("Feb", 6500000),
                 new XYChart.Data<>("Mar", 6200000),
@@ -95,9 +122,9 @@ public class DashboardContent {
                 new XYChart.Data<>("Jun", 8500000)
         );
 
-        XYChart.Series<String, Number> expensesSeries = new XYChart.Series<>();
-        expensesSeries.setName("Expenses");
-        expensesSeries.getData().addAll(
+        XYChart.Series<String, Number> exp = new XYChart.Series<>();
+        exp.setName("Expenses");
+        exp.getData().addAll(
                 new XYChart.Data<>("Jan", 1500000),
                 new XYChart.Data<>("Feb", 1700000),
                 new XYChart.Data<>("Mar", 1500000),
@@ -106,66 +133,192 @@ public class DashboardContent {
                 new XYChart.Data<>("Jun", 1400000)
         );
 
-        barChart.getData().addAll(revenueSeries, expensesSeries);
+        chart.getData().addAll(rev, exp);
 
-        javafx.application.Platform.runLater(() -> {
-            if (revenueSeries.getNode() != null) {
-                revenueSeries.getNode().setStyle("-fx-bar-fill: #1E40AF;");
+        Platform.runLater(() -> {
+            // color series: revenue #2C3E8C, expenses #4FD1C5
+            for (int i = 0; i < chart.getData().size(); i++) {
+                XYChart.Series<String, Number> s = chart.getData().get(i);
+                String color = (i == 0) ? "#2C3E8C" : "#4FD1C5";
+                for (XYChart.Data<String, Number> d : s.getData()) {
+                    if (d.getNode() != null) {
+                        d.getNode().setStyle("-fx-bar-fill: " + color + ";");
+                        Tooltip.install(d.getNode(), new Tooltip(s.getName() + ": " + String.format("%,d", d.getYValue().intValue())));
+                    }
+                }
             }
-            if (expensesSeries.getNode() != null) {
-                expensesSeries.getNode().setStyle("-fx-bar-fill: #5FD3BC;");
+
+            // combined Feb tooltip example
+            try {
+                XYChart.Data<String, Number> rFeb = rev.getData().get(1);
+                XYChart.Data<String, Number> eFeb = exp.getData().get(1);
+                if (rFeb.getNode() != null) Tooltip.install(rFeb.getNode(), new Tooltip("Revenue: " + String.format("%,d", rFeb.getYValue().intValue()) + "\nExpenses: " + String.format("%,d", eFeb.getYValue().intValue())));
+            } catch (Exception ignored) {}
+        });
+
+        chart.prefWidthProperty().bind(container.widthProperty());
+
+        container.getChildren().addAll(title, chart);
+        VBox.setVgrow(chart, Priority.ALWAYS);
+        return container;
+    }
+
+    private VBox createOccupancyBox() {
+        VBox container = new VBox(12);
+        container.setPadding(new Insets(20));
+        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
+        container.setMinWidth(240);
+
+        Label title = new Label("Occupancy Rate");
+        title.setFont(Font.font("System", FontWeight.BOLD, 16));
+        title.setStyle("-fx-text-fill: #000000;");
+
+        int occupied = 142;
+        int available = 14;
+        double pct = Math.round((occupied * 100.0 / (occupied + available)) * 10.0) / 10.0;
+
+        PieChart pie = new PieChart();
+        pie.setLegendVisible(false);
+        pie.setLabelsVisible(false);
+        PieChart.Data d1 = new PieChart.Data("Occupied", occupied);
+        PieChart.Data d2 = new PieChart.Data("Available", available);
+        pie.getData().addAll(d1, d2);
+        pie.setPrefSize(200, 200);
+
+        StackPane donut = new StackPane();
+        donut.setPrefSize(200, 200);
+
+        Circle inner = new Circle(64, Color.web("#F8FAFC"));
+        inner.setStroke(Color.TRANSPARENT);
+
+        Label centerNum = new Label(String.valueOf(occupied));
+        centerNum.setFont(Font.font("System", FontWeight.BOLD, 20));
+        centerNum.setStyle("-fx-text-fill: #000000;");
+
+        Label centerSub = new Label("Occupied\n(" + String.format("%.0f", pct) + "% )");
+        centerSub.setFont(Font.font(12));
+        centerSub.setStyle("-fx-text-fill: #6B7280;");
+
+        VBox centerBox = new VBox(2, centerNum, centerSub);
+        centerBox.setAlignment(Pos.CENTER);
+
+        donut.getChildren().addAll(pie, inner, centerBox);
+
+        Platform.runLater(() -> {
+            if (pie.getData().size() >= 2) {
+                if (d1.getNode() != null) d1.getNode().setStyle("-fx-pie-color: #4FD1C5;");
+                if (d2.getNode() != null) d2.getNode().setStyle("-fx-pie-color: #F5C542;");
             }
         });
 
-        chartContainer.getChildren().addAll(chartTitle, barChart);
-        VBox.setVgrow(barChart, javafx.scene.layout.Priority.ALWAYS);
-
-        return chartContainer;
+        container.getChildren().addAll(title, donut);
+        return container;
     }
 
-    private VBox createOccupancyChart() {
-        VBox chartContainer = new VBox();
-        chartContainer.setPadding(new Insets(20));
-        chartContainer.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #EEEEEE;");
-        chartContainer.setSpacing(15);
-        chartContainer.setAlignment(Pos.TOP_CENTER);
+    private VBox createActivitiesPanel() {
+        VBox container = new VBox(12);
+        container.setPadding(new Insets(20));
+        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
 
-        Label chartTitle = new Label("Occupancy Rate");
-        chartTitle.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        Label title = new Label("Recent Activities");
+        title.setFont(Font.font("System", FontWeight.BOLD, 16));
+        title.setStyle("-fx-text-fill: #000000;");
 
-        // Donut chart (simulated with circles)
-        HBox donutContainer = new HBox();
-        donutContainer.setAlignment(Pos.CENTER);
-        donutContainer.setPrefHeight(250);
+        VBox list = new VBox(12);
+        list.getChildren().addAll(
+                activityRow(Color.web("#10B981"), "Payment received from Sarah Johnson for Riverside - 205", "2 hours ago"),
+                activityRow(Color.web("#2C3E8C"), "New maintenance request – Building A", "4 hours ago"),
+                activityRow(Color.web("#10B981"), "Construction permit approved for Land #3", "1 day ago"),
+                activityRow(Color.web("#2C3E8C"), "New buyer registered – Garden View 412", "2 days ago"),
+                activityRow(Color.web("#F5C542"), "Overdue payment alert – 1 buyer", "2 days ago")
+        );
 
-        VBox donut = createDonutChart();
-        donutContainer.getChildren().add(donut);
+        ScrollPane scroll = new ScrollPane(list);
+        scroll.setFitToWidth(true);
+        scroll.setPrefViewportHeight(220);
 
-        chartContainer.getChildren().addAll(chartTitle, donutContainer);
-        VBox.setVgrow(chartContainer, javafx.scene.layout.Priority.ALWAYS);
-
-        return chartContainer;
+        container.getChildren().addAll(title, scroll);
+        return container;
     }
 
-    private VBox createDonutChart() {
-        VBox donut = new VBox();
-        donut.setAlignment(Pos.CENTER);
-        donut.setPrefSize(200, 200);
+    private HBox activityRow(Color dotColor, String text, String time) {
+        HBox row = new HBox(12);
+        row.setAlignment(Pos.CENTER_LEFT);
 
-        // Create nested circles for donut effect
-        Circle outerCircle = new Circle(100);
-        outerCircle.setFill(Color.web("#5FD3BC"));
+        Circle dot = new Circle(6, dotColor);
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-text-fill: #000000; -fx-font-size: 13;");
+        lbl.setWrapText(true);
 
-        Circle innerCircle = new Circle(60);
-        innerCircle.setFill(Color.web("#F5F5F5"));
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Circle segment = new Circle(100);
-        segment.setFill(Color.web("#F59E0B"));
+        Label timeLbl = new Label(time);
+        timeLbl.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12;");
 
-        // Stack the circles to create donut
-        donut.getChildren().addAll(outerCircle, innerCircle);
+        row.getChildren().addAll(dot, lbl, spacer, timeLbl);
+        return row;
+    }
 
-        return donut;
+    private VBox createTasksPanel() {
+        VBox container = new VBox(12);
+        container.setPadding(new Insets(20));
+        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
+
+        Label title = new Label("Upcoming Tasks");
+        title.setFont(Font.font("System", FontWeight.BOLD, 16));
+        title.setStyle("-fx-text-fill: #000000;");
+
+        VBox list = new VBox(12);
+        list.getChildren().addAll(
+                taskRow("Review permit application for Building C extension", "Today", "high"),
+                taskRow("Schedule maintenance for Building B elevator", "Tomorrow", "medium"),
+                taskRow("Follow up on pending payments from buyers", "Nov 12", "high"),
+                taskRow("Conduct property inspection – Land #5", "Nov 14", "low")
+        );
+
+        ScrollPane scroll = new ScrollPane(list);
+        scroll.setFitToWidth(true);
+        scroll.setPrefViewportHeight(220);
+
+        container.getChildren().addAll(title, scroll);
+        return container;
+    }
+
+    private HBox taskRow(String text, String date, String priority) {
+        HBox row = new HBox(12);
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        CheckBox cb = new CheckBox();
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-text-fill: #000000; -fx-font-size: 13;");
+        lbl.setWrapText(true);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Label dateLbl = new Label(date);
+        dateLbl.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12;");
+
+        Label badge = new Label();
+        badge.setStyle("-fx-text-fill: white; -fx-padding: 4 10; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold;");
+        switch (priority) {
+            case "high":
+                badge.setText("HIGH");
+                badge.setStyle(badge.getStyle() + " -fx-background-color: #EF4444;");
+                break;
+            case "medium":
+                badge.setText("MEDIUM");
+                badge.setStyle(badge.getStyle() + " -fx-background-color: #F5C542;");
+                break;
+            default:
+                badge.setText("LOW");
+                badge.setStyle(badge.getStyle() + " -fx-background-color: #10B981;");
+                break;
+        }
+
+        row.getChildren().addAll(cb, lbl, spacer, dateLbl, badge);
+        return row;
     }
 
     public VBox getRoot() {

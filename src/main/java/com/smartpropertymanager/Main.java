@@ -18,6 +18,10 @@ import com.smartpropertymanager.components.Sidebar;
 import com.smartpropertymanager.pages.Page;
 import com.smartpropertymanager.pages.DashboardPage;
 import com.smartpropertymanager.pages.SimplePage;
+import com.smartpropertymanager.pages.BuildingManagementPage;
+import com.smartpropertymanager.pages.BuyerManagementPage;
+import com.smartpropertymanager.pages.LandManagementPage;
+import com.smartpropertymanager.pages.MaintenanceTrackerPage;
 
 public class Main extends Application {
     private VBox contentArea;
@@ -78,11 +82,19 @@ public class Main extends Application {
             case "Dashboard":
                 page = new DashboardPage();
                 break;
-            case "Buildings":
-            case "Buyers":
-            case "Lands":
-            case "Permits":
+            case "Building Management":
+                page = new BuildingManagementPage();
+                break;
+            case "Land Management":
+                page = new LandManagementPage();
+                break;
+            case "Buyer Management":
+                page = new BuyerManagementPage();
+                break;
             case "Maintenance":
+                page = new MaintenanceTrackerPage();
+                break;
+            case "Permits":
             case "Reports":
             case "Requests":
             case "Settings":

@@ -1,10 +1,10 @@
 package com.smartpropertymanager.pages;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.layout.VBox;
-import javafx.scene.control.Label;
 import com.smartpropertymanager.components.DashboardContent;
+
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
 public class DashboardPage implements Page {
     private VBox content;
