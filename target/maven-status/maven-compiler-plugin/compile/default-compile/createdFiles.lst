@@ -1,9 +1,0 @@
-com\smartpropertymanager\components\StatCard.class
-com\smartpropertymanager\pages\DashboardPage.class
-module-info.class
-com\smartpropertymanager\controllers\HomeController.class
-com\smartpropertymanager\Main.class
-com\smartpropertymanager\pages\SimplePage.class
-com\smartpropertymanager\components\DashboardContent.class
-com\smartpropertymanager\pages\Page.class
-com\smartpropertymanager\components\Sidebar.class
