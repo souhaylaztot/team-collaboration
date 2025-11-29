@@ -1,16 +1,34 @@
 package com.smartpropertymanager.pages;
 
-import com.smartpropertymanager.components.BuildingCard;
-import com.smartpropertymanager.models.Building;
-import com.smartpropertymanager.models.Apartment;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.smartpropertymanager.components.BuildingCard;
+import com.smartpropertymanager.models.Apartment;
+import com.smartpropertymanager.models.Building;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public class BuildingManagementPage implements Page {
     private VBox content;
@@ -25,6 +43,8 @@ public class BuildingManagementPage implements Page {
     );
     
     private Building selectedBuilding = null;
+    private TextField searchField;
+    private GridPane buildingsGrid;
 
     public BuildingManagementPage() {
         content = new VBox();
@@ -48,7 +68,7 @@ public class BuildingManagementPage implements Page {
 
         // Buildings Grid
         ScrollPane gridScroll = new ScrollPane();
-        GridPane buildingsGrid = createBuildingsGrid();
+        buildingsGrid = createBuildingsGrid();
         gridScroll.setContent(buildingsGrid);
         gridScroll.setFitToWidth(true);
         gridScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
@@ -101,10 +121,15 @@ public class BuildingManagementPage implements Page {
         searchBar.setAlignment(Pos.CENTER_LEFT);
         searchBar.setSpacing(12);
 
-        TextField searchField = new TextField();
+        searchField = new TextField();
         searchField.setPromptText("Search buildings by name or location...");
         searchField.setStyle("-fx-padding: 12 12 12 40; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #D1D5DB; -fx-font-size: 14;");
         searchField.setPrefWidth(500);
+        
+        // Add search functionality
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterBuildings(newValue);
+        });
 
         Label searchIcon = new Label("🔍");
         searchIcon.setStyle("-fx-text-fill: #6B7280; -fx-padding: 0 0 0 12;");
@@ -139,6 +164,30 @@ public class BuildingManagementPage implements Page {
         }
 
         return grid;
+    }
+    
+    private void filterBuildings(String searchText) {
+        buildingsGrid.getChildren().clear();
+        
+        List<Building> filteredBuildings = buildings.stream()
+            .filter(building -> searchText == null || searchText.trim().isEmpty() ||
+                    building.getName().toLowerCase().contains(searchText.toLowerCase()) ||
+                    building.getLocation().toLowerCase().contains(searchText.toLowerCase()))
+            .collect(Collectors.toList());
+        
+        int col = 0;
+        int row = 0;
+        for (Building building : filteredBuildings) {
+            BuildingCard card = new BuildingCard(building);
+            card.setOnViewClicked(b -> showApartmentListView(b));
+            
+            buildingsGrid.add(card, col, row);
+            col++;
+            if (col >= 3) {
+                col = 0;
+                row++;
+            }
+        }
     }
 
     private HBox createApartmentTopBar(Building building) {
@@ -281,19 +330,132 @@ public class BuildingManagementPage implements Page {
     }
 
     private void showAddBuildingDialog() {
-        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
-        dialog.setTitle("Add Building");
-        dialog.setHeaderText("Add New Building");
-        dialog.setContentText("Add Building dialog would open here");
-        dialog.showAndWait();
+        Dialog<Building> dialog = new Dialog<>();
+        dialog.setTitle("Add New Building");
+        dialog.setHeaderText("Enter building details");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Building Name");
+        TextField locationField = new TextField();
+        locationField.setPromptText("Address");
+        TextField floorsField = new TextField();
+        floorsField.setPromptText("Number of floors");
+        TextField apartmentsField = new TextField();
+        apartmentsField.setPromptText("Total apartments");
+
+        grid.add(new Label("Name:"), 0, 0);
+        grid.add(nameField, 1, 0);
+        grid.add(new Label("Location:"), 0, 1);
+        grid.add(locationField, 1, 1);
+        grid.add(new Label("Floors:"), 0, 2);
+        grid.add(floorsField, 1, 2);
+        grid.add(new Label("Apartments:"), 0, 3);
+        grid.add(apartmentsField, 1, 3);
+
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType addButtonType = new ButtonType("Add Building", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == addButtonType) {
+                try {
+                    return new Building(buildings.size() + 1, nameField.getText(), locationField.getText(),
+                                      Integer.parseInt(floorsField.getText()), 
+                                      Integer.parseInt(apartmentsField.getText()), 0, "Active");
+                } catch (NumberFormatException e) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Invalid Input");
+                    errorAlert.setContentText("Please enter valid numbers for floors and apartments.");
+                    errorAlert.showAndWait();
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(building -> {
+            if (building != null) {
+                buildings.add(building);
+                filterBuildings(searchField.getText()); // Refresh the grid
+                
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Success");
+                successAlert.setHeaderText("Building Added");
+                successAlert.setContentText(building.getName() + " has been successfully added.");
+                successAlert.showAndWait();
+            }
+        });
     }
 
     private void showAddApartmentDialog() {
-        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
-        dialog.setTitle("Add Apartment");
-        dialog.setHeaderText("Add New Apartment");
-        dialog.setContentText("Add Apartment dialog would open here");
-        dialog.showAndWait();
+        Dialog<Apartment> dialog = new Dialog<>();
+        dialog.setTitle("Add New Apartment");
+        dialog.setHeaderText("Enter apartment details for " + selectedBuilding.getName());
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField numberField = new TextField();
+        numberField.setPromptText("Apartment Number");
+        TextField floorField = new TextField();
+        floorField.setPromptText("Floor");
+        TextField sizeField = new TextField();
+        sizeField.setPromptText("Size (sq ft)");
+        TextField bedroomsField = new TextField();
+        bedroomsField.setPromptText("Number of bedrooms");
+        TextField priceField = new TextField();
+        priceField.setPromptText("Price (MAD)");
+
+        grid.add(new Label("Number:"), 0, 0);
+        grid.add(numberField, 1, 0);
+        grid.add(new Label("Floor:"), 0, 1);
+        grid.add(floorField, 1, 1);
+        grid.add(new Label("Size:"), 0, 2);
+        grid.add(sizeField, 1, 2);
+        grid.add(new Label("Bedrooms:"), 0, 3);
+        grid.add(bedroomsField, 1, 3);
+        grid.add(new Label("Price:"), 0, 4);
+        grid.add(priceField, 1, 4);
+
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType addButtonType = new ButtonType("Add Apartment", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == addButtonType) {
+                try {
+                    return new Apartment(numberField.getText(), Integer.parseInt(floorField.getText()),
+                                       sizeField.getText(), Integer.parseInt(bedroomsField.getText()),
+                                       Integer.parseInt(priceField.getText()), "Available", "-");
+                } catch (NumberFormatException e) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Invalid Input");
+                    errorAlert.setContentText("Please enter valid numbers for floor, bedrooms, and price.");
+                    errorAlert.showAndWait();
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(apartment -> {
+            if (apartment != null) {
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Success");
+                successAlert.setHeaderText("Apartment Added");
+                successAlert.setContentText("Apartment " + apartment.getNumber() + " has been successfully added.");
+                successAlert.showAndWait();
+            }
+        });
     }
 
     private void showEditApartmentDialog(Apartment apartment) {

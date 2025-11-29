@@ -1,15 +1,22 @@
 package com.smartpropertymanager.components;
 
+import java.util.function.Consumer;
+
 import com.smartpropertymanager.models.Building;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import java.util.function.Consumer;
 
 public class BuildingCard extends VBox {
     private Consumer<Building> onViewClicked;

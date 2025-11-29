@@ -179,6 +179,22 @@ public class MaintenanceTrackerPage implements Page {
         
         tabPane.getTabs().addAll(allTab, pendingTab, inProgressTab, completedTab);
         
+        // Search bar for maintenance requests
+        HBox searchBar = new HBox(12);
+        searchBar.setAlignment(Pos.CENTER_LEFT);
+        searchBar.setPadding(new Insets(0, 0, 16, 0));
+        
+        TextField requestSearchField = new TextField();
+        requestSearchField.setPromptText("Search by building, issue, or requester...");
+        requestSearchField.setStyle("-fx-padding: 8; -fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #D1D5DB;");
+        requestSearchField.setPrefWidth(400);
+        
+        requestSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterRequestsBySearch(newValue);
+        });
+        
+        searchBar.getChildren().add(requestSearchField);
+        
         // Add listener for tab changes
         tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
             Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
@@ -194,7 +210,7 @@ public class MaintenanceTrackerPage implements Page {
         scrollPane.setStyle("-fx-control-inner-background: white;");
         
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
-        section.getChildren().addAll(tabPane, scrollPane);
+        section.getChildren().addAll(searchBar, tabPane, scrollPane);
         
         return section;
     }
@@ -431,30 +447,155 @@ public class MaintenanceTrackerPage implements Page {
         int childIndex = content.getChildren().indexOf(requestsList);
         if (childIndex >= 0 && content.getChildren().size() > childIndex) {
             VBox section = (VBox) content.getChildren().get(childIndex);
-            ScrollPane scrollPane = (ScrollPane) section.getChildren().get(1);
+            ScrollPane scrollPane = (ScrollPane) section.getChildren().get(2); // Updated index due to search bar
             scrollPane.setContent(newList);
         }
         requestsList = newList;
     }
+    
+    private void filterRequestsBySearch(String searchText) {
+        if (searchText == null || searchText.trim().isEmpty()) {
+            // Reset to current tab filter
+            Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+            if (selectedTab != null) {
+                filterRequestsByTabIndex(tabPane.getTabs().indexOf(selectedTab));
+            }
+            return;
+        }
+        
+        String lowerSearchText = searchText.toLowerCase();
+        filteredRequests.setPredicate(request -> 
+            request.getBuilding().toLowerCase().contains(lowerSearchText) ||
+            request.getIssue().toLowerCase().contains(lowerSearchText) ||
+            request.getRequestedBy().toLowerCase().contains(lowerSearchText) ||
+            request.getDescription().toLowerCase().contains(lowerSearchText)
+        );
+        refreshRequestsList();
+    }
 
     private void showNewRequestDialog() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("New Maintenance Request");
-        alert.setHeaderText("Create Maintenance Request");
-        alert.setContentText("New request dialog would open here with form fields for building, location, issue, priority, etc.");
-        alert.showAndWait();
+        Dialog<MaintenanceRequest> dialog = new Dialog<>();
+        dialog.setTitle("New Maintenance Request");
+        dialog.setHeaderText("Create a new maintenance request");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        ComboBox<String> buildingCombo = new ComboBox<>();
+        buildingCombo.getItems().addAll("Skyline Tower", "Riverside Apartments", "Garden View Complex", "Metro Heights");
+        buildingCombo.setPromptText("Select building");
+        
+        TextField apartmentField = new TextField();
+        apartmentField.setPromptText("Apartment/Location");
+        
+        TextField requesterField = new TextField();
+        requesterField.setPromptText("Requested by");
+        
+        TextField issueField = new TextField();
+        issueField.setPromptText("Issue summary");
+        
+        TextArea descriptionArea = new TextArea();
+        descriptionArea.setPromptText("Detailed description");
+        descriptionArea.setPrefRowCount(3);
+        
+        ComboBox<String> priorityCombo = new ComboBox<>();
+        priorityCombo.getItems().addAll("low", "medium", "high");
+        priorityCombo.setPromptText("Select priority");
+        
+        TextField costField = new TextField();
+        costField.setPromptText("Estimated cost (MAD)");
+
+        grid.add(new Label("Building:"), 0, 0);
+        grid.add(buildingCombo, 1, 0);
+        grid.add(new Label("Location:"), 0, 1);
+        grid.add(apartmentField, 1, 1);
+        grid.add(new Label("Requested by:"), 0, 2);
+        grid.add(requesterField, 1, 2);
+        grid.add(new Label("Issue:"), 0, 3);
+        grid.add(issueField, 1, 3);
+        grid.add(new Label("Description:"), 0, 4);
+        grid.add(descriptionArea, 1, 4);
+        grid.add(new Label("Priority:"), 0, 5);
+        grid.add(priorityCombo, 1, 5);
+        grid.add(new Label("Est. Cost:"), 0, 6);
+        grid.add(costField, 1, 6);
+
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType createButtonType = new ButtonType("Create Request", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == createButtonType) {
+                try {
+                    String requestId = "MNT-2025-" + String.format("%03d", maintenanceRequests.size() + 50);
+                    return new MaintenanceRequest(requestId, buildingCombo.getValue(), apartmentField.getText(),
+                                                requesterField.getText(), issueField.getText(), descriptionArea.getText(),
+                                                priorityCombo.getValue(), "pending", java.time.LocalDate.now().toString(),
+                                                Integer.parseInt(costField.getText()), null, null);
+                } catch (NumberFormatException e) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Invalid Input");
+                    errorAlert.setContentText("Please enter a valid number for estimated cost.");
+                    errorAlert.showAndWait();
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(request -> {
+            if (request != null) {
+                maintenanceRequests.add(request);
+                refreshRequestsList();
+                
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Success");
+                successAlert.setHeaderText("Request Created");
+                successAlert.setContentText("Maintenance request " + request.getId() + " has been created successfully.");
+                successAlert.showAndWait();
+            }
+        });
     }
 
     private void assignRequest(MaintenanceRequest request) {
-        request.setStatus("in-progress");
-        request.setAssignedTo("Assigned Technician");
-        refreshRequestsList();
+        TextInputDialog assignDialog = new TextInputDialog("Maintenance Team");
+        assignDialog.setTitle("Assign Request");
+        assignDialog.setHeaderText("Assign maintenance request: " + request.getId());
+        assignDialog.setContentText("Assign to:");
+        
+        assignDialog.showAndWait().ifPresent(assignee -> {
+            request.setStatus("in-progress");
+            request.setAssignedTo(assignee);
+            refreshRequestsList();
+            
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+            successAlert.setTitle("Request Assigned");
+            successAlert.setContentText("Request " + request.getId() + " has been assigned to " + assignee);
+            successAlert.showAndWait();
+        });
     }
 
     private void completeRequest(MaintenanceRequest request) {
-        request.setStatus("completed");
-        request.setCompletedDate(java.time.LocalDate.now().toString());
-        refreshRequestsList();
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Complete Request");
+        confirmAlert.setHeaderText("Mark request as completed?");
+        confirmAlert.setContentText("Request: " + request.getId() + "\nIssue: " + request.getIssue());
+        
+        confirmAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                request.setStatus("completed");
+                request.setCompletedDate(java.time.LocalDate.now().toString());
+                refreshRequestsList();
+                
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Request Completed");
+                successAlert.setContentText("Request " + request.getId() + " has been marked as completed.");
+                successAlert.showAndWait();
+            }
+        });
     }
 
     private void showRequestDetails(MaintenanceRequest request) {

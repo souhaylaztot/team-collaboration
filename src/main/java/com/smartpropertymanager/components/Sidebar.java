@@ -1,12 +1,12 @@
 package com.smartpropertymanager.components;
 
+import java.util.function.Consumer;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
-import java.util.function.Consumer;
+import javafx.scene.layout.VBox;
 
 public class Sidebar {
     private VBox root;

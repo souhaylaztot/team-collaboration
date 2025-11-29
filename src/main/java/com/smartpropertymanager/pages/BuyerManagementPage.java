@@ -174,6 +174,22 @@ public class BuyerManagementPage implements Page {
         section.setPadding(new Insets(20));
         section.setSpacing(16);
 
+        // Search bar for buyers
+        HBox searchBar = new HBox(12);
+        searchBar.setAlignment(Pos.CENTER_LEFT);
+        searchBar.setPadding(new Insets(0, 0, 16, 0));
+        
+        TextField buyerSearchField = new TextField();
+        buyerSearchField.setPromptText("Search buyers by name, property, or email...");
+        buyerSearchField.setStyle("-fx-padding: 8; -fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #D1D5DB;");
+        buyerSearchField.setPrefWidth(400);
+        
+        buyerSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterBuyersBySearch(newValue);
+        });
+        
+        searchBar.getChildren().add(buyerSearchField);
+        
         // Tabs
         tabPane = new TabPane();
         tabPane.setStyle("-fx-font-size: 13;");
@@ -198,7 +214,7 @@ public class BuyerManagementPage implements Page {
         // Table
         tableView = createBuyersTable();
         
-        section.getChildren().addAll(tabPane, tableView);
+        section.getChildren().addAll(searchBar, tabPane, tableView);
         VBox.setVgrow(tableView, Priority.ALWAYS);
         
         return section;
@@ -343,6 +359,25 @@ public class BuyerManagementPage implements Page {
                 filteredBuyers.setPredicate(buyer -> "overdue".equals(buyer.getPaymentStatus()));
                 break;
         }
+    }
+    
+    private void filterBuyersBySearch(String searchText) {
+        if (searchText == null || searchText.trim().isEmpty()) {
+            // Reset to current tab filter
+            Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+            if (selectedTab != null) {
+                filterBuyersByTab(selectedTab.getText());
+            }
+            return;
+        }
+        
+        String lowerSearchText = searchText.toLowerCase();
+        filteredBuyers.setPredicate(buyer -> 
+            buyer.getName().toLowerCase().contains(lowerSearchText) ||
+            buyer.getProperty().toLowerCase().contains(lowerSearchText) ||
+            buyer.getEmail().toLowerCase().contains(lowerSearchText) ||
+            buyer.getPhone().toLowerCase().contains(lowerSearchText)
+        );
     }
 
     private void showExportDialog() {
