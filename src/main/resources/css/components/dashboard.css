@@ -1,0 +1,91 @@
+/* Dashboard Styles */
+.dashboard-container {
+    -fx-background-color: var(--primary-bg);
+    -fx-padding: 24;
+    -fx-spacing: 24;
+}
+
+.dashboard-header .label {
+    -fx-text-fill: var(--text-primary);
+}
+
+.dashboard-header .label-secondary {
+    -fx-text-fill: var(--text-secondary);
+}
+
+.stat-card {
+    -fx-background-color: var(--card-bg);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: var(--border-color);
+    -fx-effect: dropshadow(gaussian, var(--shadow-light), 10, 0, 0, 4);
+    -fx-padding: 16;
+}
+
+.stat-card:hover {
+    -fx-effect: dropshadow(gaussian, var(--shadow-medium), 15, 0, 0, 6);
+}
+
+.stat-card .label {
+    -fx-text-fill: var(--text-primary);
+}
+
+.stat-card .label-secondary {
+    -fx-text-fill: var(--text-secondary);
+}
+
+.chart-container {
+    -fx-background-color: var(--card-bg);
+    -fx-border-color: var(--border-color);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 20;
+}
+
+.chart-title {
+    -fx-text-fill: var(--text-primary);
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+}
+
+.activity-item {
+    -fx-padding: 12;
+    -fx-spacing: 12;
+}
+
+.activity-item .label {
+    -fx-text-fill: var(--text-primary);
+}
+
+.activity-item .label-secondary {
+    -fx-text-fill: var(--text-secondary);
+}
+
+.task-item {
+    -fx-padding: 12;
+    -fx-spacing: 12;
+}
+
+.task-item .label {
+    -fx-text-fill: var(--text-primary);
+}
+
+.task-badge {
+    -fx-text-fill: white;
+    -fx-padding: 4 10;
+    -fx-background-radius: 6;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+}
+
+.task-badge.high {
+    -fx-background-color: var(--error);
+}
+
+.task-badge.medium {
+    -fx-background-color: var(--warning);
+}
+
+.task-badge.low {
+    -fx-background-color: var(--success);
+}

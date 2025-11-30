@@ -1,6 +1,7 @@
 package com.smartpropertymanager.pages;
 
 import com.smartpropertymanager.components.DashboardContent;
+import com.smartpropertymanager.utils.ThemeManager;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -8,17 +9,19 @@ import javafx.scene.layout.VBox;
 
 public class DashboardPage implements Page {
     private VBox content;
+    private DashboardContent dashboard;
 
     public DashboardPage() {
         content = new VBox();
-        content.setStyle("-fx-background-color: #F5F5F5;");
+        content.getStyleClass().add("dashboard-container");
         content.setPadding(new Insets(30));
         content.setSpacing(20);
 
         Label title = new Label("Dashboard");
-        title.setStyle("-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        title.getStyleClass().add("label");
+        title.setStyle("-fx-font-size: 28; -fx-font-weight: bold;");
 
-        DashboardContent dashboard = new DashboardContent();
+        dashboard = new DashboardContent();
         
         content.getChildren().addAll(title, dashboard.getRoot());
     }
@@ -32,4 +35,6 @@ public class DashboardPage implements Page {
     public String getTitle() {
         return "Dashboard";
     }
+    
+    // Theme refresh no longer needed - CSS handles it automatically
 }

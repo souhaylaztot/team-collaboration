@@ -10,8 +10,9 @@ import com.smartpropertymanager.pages.Page;
 import com.smartpropertymanager.pages.PermitManagementPage;
 import com.smartpropertymanager.pages.ReportsAnalyticsPage;
 import com.smartpropertymanager.pages.RequestCenterPage;
-import com.smartpropertymanager.pages.SimplePage;
 import com.smartpropertymanager.pages.SettingsPage;
+import com.smartpropertymanager.pages.SimplePage;
+import com.smartpropertymanager.utils.ThemeManager;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -32,26 +33,30 @@ public class Main extends Application {
     private VBox contentArea;
     private ScrollPane scrollPane;
     private TextField searchField;
-    private boolean isDarkMode = false;
+    private HBox header;
+    private VBox mainContent;
+    private BorderPane root;
+    private Scene scene;
+    private Sidebar sidebar;
 
     @Override
     public void start(Stage primaryStage) {
-        BorderPane root = new BorderPane();
+        root = new BorderPane();
         root.setStyle("-fx-font-family: 'Segoe UI', Arial, sans-serif;");
 
         // Create sidebar
-        Sidebar sidebar = new Sidebar();
+        sidebar = new Sidebar();
         sidebar.setOnMenuItemClick(this::navigateTo);
         root.setLeft(sidebar.getRoot());
 
         // Create main content area
-        VBox mainContent = createMainContent();
+        mainContent = createMainContent();
         root.setCenter(mainContent);
 
         // Load Dashboard page by default
         navigateTo("Dashboard");
 
-        Scene scene = new Scene(root, 1400, 900);
+        scene = new Scene(root, 1400, 900);
         scene.setFill(Color.web("#F5F5F5"));
 
         primaryStage.setTitle("Smart Property Manager Pro");
@@ -60,26 +65,26 @@ public class Main extends Application {
     }
 
     private VBox createMainContent() {
-        VBox mainContent = new VBox();
-        mainContent.setStyle("-fx-background-color: #F5F5F5;");
+        VBox content = new VBox();
+        content.getStyleClass().add("main-content");
 
         // Header
-        HBox header = createHeader();
-        mainContent.getChildren().add(header);
+        header = createHeader();
+        content.getChildren().add(header);
 
         // Content area with scroll pane
         scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-control-inner-background: #F5F5F5;");
+        scrollPane.getStyleClass().add("main-scroll-pane");
 
         contentArea = new VBox();
-        contentArea.setStyle("-fx-background-color: #F5F5F5;");
+        contentArea.getStyleClass().add("content-area");
         scrollPane.setContent(contentArea);
 
         VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
-        mainContent.getChildren().add(scrollPane);
+        content.getChildren().add(scrollPane);
 
-        return mainContent;
+        return content;
     }
 
     private void navigateTo(String pageName) {
@@ -122,22 +127,24 @@ public class Main extends Application {
 
         // Clear previous content and set new page
         contentArea.getChildren().clear();
-        contentArea.getChildren().add(page.getContent());
+        javafx.scene.Node pageContent = page.getContent();
+        pageContent.setUserData(page); // Store reference to page object
+        contentArea.getChildren().add(pageContent);
         scrollPane.setVvalue(0);
     }
 
     private HBox createHeader() {
-        HBox header = new HBox();
-        header.setPadding(new Insets(15, 25, 15, 25));
-        header.setSpacing(15);
-        header.setStyle("-fx-background-color: white; -fx-border-color: #EEEEEE; -fx-border-width: 0 0 1 0;");
-        header.setAlignment(Pos.CENTER_LEFT);
+        HBox headerBox = new HBox();
+        headerBox.setPadding(new Insets(15, 25, 15, 25));
+        headerBox.setSpacing(15);
+        headerBox.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-color: " + ThemeManager.getBorderColor() + "; -fx-border-width: 0 0 1 0;");
+        headerBox.setAlignment(Pos.CENTER_LEFT);
 
         // Search bar
         searchField = new TextField();
         searchField.setPromptText("Search buildings, buyers, permits...");
         searchField.setPrefWidth(500);
-        searchField.setStyle("-fx-padding: 10; -fx-font-size: 14; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #EEEEEE;");
+        searchField.getStyleClass().add("search-field");
         
         // Add search functionality
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -145,30 +152,29 @@ public class Main extends Application {
         });
 
         HBox.setHgrow(searchField, javafx.scene.layout.Priority.SOMETIMES);
-        header.getChildren().add(searchField);
+        headerBox.getChildren().add(searchField);
 
         // Spacer
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-        header.getChildren().add(spacer);
+        headerBox.getChildren().add(spacer);
 
         // Dark mode toggle
-        Button darkModeBtn = new Button("🌙");
-        darkModeBtn.setStyle("-fx-padding: 8 15; -fx-font-size: 16; -fx-background-color: transparent;");
-        darkModeBtn.setCursor(javafx.scene.Cursor.HAND);
+        Button darkModeBtn = new Button(ThemeManager.isDarkMode() ? "☀️" : "🌙");
+        darkModeBtn.getStyleClass().addAll("button", "icon-button");
         darkModeBtn.setOnAction(e -> toggleDarkMode(darkModeBtn));
-        header.getChildren().add(darkModeBtn);
+        headerBox.getChildren().add(darkModeBtn);
 
         // Notifications
         Button notificationsBtn = new Button("🔔");
-        notificationsBtn.setStyle("-fx-padding: 8 15; -fx-font-size: 16; -fx-background-color: transparent;");
+        notificationsBtn.getStyleClass().addAll("button", "icon-button");
         notificationsBtn.setCursor(javafx.scene.Cursor.HAND);
         notificationsBtn.setOnAction(e -> showNotifications());
         Label notificationBadge = new Label("3");
         notificationBadge.setStyle("-fx-background-color: #FFA500; -fx-text-fill: white; -fx-padding: 2 6; -fx-border-radius: 10; -fx-font-size: 12; -fx-font-weight: bold;");
         VBox notificationBox = new VBox(notificationsBtn, notificationBadge);
         notificationBox.setPadding(new Insets(-20, 0, 0, -10));
-        header.getChildren().add(notificationBox);
+        headerBox.getChildren().add(notificationBox);
 
         // User profile
         HBox userProfile = new HBox(10);
@@ -176,11 +182,11 @@ public class Main extends Application {
         Label userCircle = new Label("👤");
         userCircle.setStyle("-fx-font-size: 28; -fx-text-fill: white; -fx-background-color: #5B8DBE; -fx-padding: 8; -fx-border-radius: 50;");
         Label userName = new Label("Admin User\nAdministrator");
-        userName.setStyle("-fx-font-size: 12; -fx-text-fill: #333333;");
+        userName.setStyle("-fx-font-size: 12; -fx-text-fill: " + ThemeManager.getTextColor() + ";");
         userProfile.getChildren().addAll(userCircle, userName);
-        header.getChildren().add(userProfile);
+        headerBox.getChildren().add(userProfile);
 
-        return header;
+        return headerBox;
     }
 
     private void performSearch(String searchText) {
@@ -199,23 +205,74 @@ public class Main extends Application {
     }
     
     private void toggleDarkMode(Button darkModeBtn) {
-        isDarkMode = !isDarkMode;
+        ThemeManager.toggleTheme();
         
-        if (isDarkMode) {
+        // Update button icon
+        if (ThemeManager.isDarkMode()) {
             darkModeBtn.setText("☀️");
-            contentArea.setStyle("-fx-background-color: #1F2937;");
-            scrollPane.setStyle("-fx-control-inner-background: #1F2937;");
         } else {
             darkModeBtn.setText("🌙");
-            contentArea.setStyle("-fx-background-color: #F5F5F5;");
-            scrollPane.setStyle("-fx-control-inner-background: #F5F5F5;");
+        }
+        
+        // Update header styles
+        updateHeaderStyles();
+        
+        // Refresh current page to apply theme
+        if (contentArea.getChildren().size() > 0) {
+            String currentPage = getCurrentPageName();
+            if (currentPage != null) {
+                navigateTo(currentPage);
+            }
         }
         
         Alert modeAlert = new Alert(Alert.AlertType.INFORMATION);
         modeAlert.setTitle("Theme Changed");
-        modeAlert.setHeaderText(isDarkMode ? "Dark Mode Enabled" : "Light Mode Enabled");
-        modeAlert.setContentText("Theme has been switched to " + (isDarkMode ? "dark" : "light") + " mode.");
+        modeAlert.setHeaderText(ThemeManager.isDarkMode() ? "Dark Mode Enabled" : "Light Mode Enabled");
+        modeAlert.setContentText("Theme has been switched to " + (ThemeManager.isDarkMode() ? "dark" : "light") + " mode.");
         modeAlert.show();
+    }
+    
+    private void updateHeaderStyles() {
+        if (header != null) {
+            header.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-color: " + ThemeManager.getBorderColor() + "; -fx-border-width: 0 0 1 0; -fx-padding: 15 25 15 25;");
+            
+            // Update all header text elements
+            header.getChildren().forEach(node -> {
+                if (node instanceof javafx.scene.control.Button) {
+                    javafx.scene.control.Button btn = (javafx.scene.control.Button) node;
+                    if (btn.getText().equals("🌙") || btn.getText().equals("☀️") || btn.getText().equals("🔔")) {
+                        btn.setStyle("-fx-padding: 8 15; -fx-font-size: 16; -fx-background-color: transparent; -fx-text-fill: " + ThemeManager.getTextColor() + ";");
+                    }
+                } else if (node instanceof javafx.scene.layout.HBox) {
+                    javafx.scene.layout.HBox hbox = (javafx.scene.layout.HBox) node;
+                    hbox.getChildren().forEach(child -> {
+                        if (child instanceof javafx.scene.control.Label) {
+                            javafx.scene.control.Label label = (javafx.scene.control.Label) child;
+                            if (label.getText().contains("Admin User")) {
+                                label.setStyle("-fx-font-size: 12; -fx-text-fill: " + ThemeManager.getTextColor() + ";");
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        if (mainContent != null) {
+            mainContent.setStyle("-fx-background-color: " + ThemeManager.getBackgroundColor() + ";");
+        }
+        if (contentArea != null) {
+            contentArea.setStyle("-fx-background-color: " + ThemeManager.getBackgroundColor() + ";");
+        }
+        if (scrollPane != null) {
+            scrollPane.setStyle("-fx-control-inner-background: " + ThemeManager.getBackgroundColor() + "; -fx-background-color: " + ThemeManager.getBackgroundColor() + ";");
+        }
+        if (searchField != null) {
+            searchField.setStyle("-fx-padding: 10; -fx-font-size: 14; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: " + ThemeManager.getBorderColor() + "; -fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-text-fill: " + ThemeManager.getTextColor() + ";");
+        }
+    }
+    
+    private String getCurrentPageName() {
+        // This is a simple way to track current page - in a real app you'd want better state management
+        return "Dashboard"; // Default fallback
     }
     
     private void showNotifications() {

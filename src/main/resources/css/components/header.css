@@ -1,0 +1,53 @@
+/* Header Styles */
+.header {
+    -fx-background-color: var(--card-bg);
+    -fx-border-color: var(--border-color);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 15 25;
+}
+
+.search-field {
+    -fx-background-color: var(--input-bg);
+    -fx-text-fill: var(--text-primary);
+    -fx-border-color: var(--border-color);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+    -fx-font-size: 14;
+}
+
+.search-field:focused {
+    -fx-border-color: var(--accent-primary);
+    -fx-border-width: 2;
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: var(--text-primary);
+    -fx-padding: 8 15;
+    -fx-font-size: 16;
+    -fx-cursor: hand;
+}
+
+.icon-button:hover {
+    -fx-background-color: var(--surface-bg);
+    -fx-background-radius: 6;
+}
+
+.user-name {
+    -fx-text-fill: var(--text-primary);
+    -fx-font-size: 12;
+}
+
+.main-content {
+    -fx-background-color: var(--primary-bg);
+}
+
+.content-area {
+    -fx-background-color: var(--primary-bg);
+}
+
+.main-scroll-pane {
+    -fx-background-color: var(--primary-bg);
+    -fx-control-inner-background: var(--primary-bg);
+}

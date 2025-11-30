@@ -1,0 +1,55 @@
+/* Settings Page Styles */
+.settings-container {
+    -fx-background-color: var(--primary-bg);
+    -fx-padding: 32;
+    -fx-spacing: 24;
+}
+
+.settings-section {
+    -fx-padding: 24;
+    -fx-spacing: 16;
+}
+
+.setting-row {
+    -fx-border-color: var(--border-color);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 0;
+    -fx-spacing: 16;
+}
+
+.setting-row:last-child {
+    -fx-border-width: 0;
+}
+
+.combo-box {
+    -fx-pref-width: 200;
+    -fx-background-color: var(--input-bg);
+    -fx-text-fill: var(--text-primary);
+    -fx-border-color: var(--border-color);
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.combo-box:focused {
+    -fx-border-color: var(--accent-primary);
+    -fx-border-width: 2;
+}
+
+.check-box {
+    -fx-text-fill: var(--text-primary);
+}
+
+.check-box .box {
+    -fx-background-color: var(--input-bg);
+    -fx-border-color: var(--border-color);
+    -fx-border-radius: 4;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: var(--accent-primary);
+}
+
+.check-box:selected .box {
+    -fx-background-color: var(--accent-primary);
+    -fx-border-color: var(--accent-primary);
+}

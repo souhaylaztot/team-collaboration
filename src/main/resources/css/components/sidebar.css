@@ -1,0 +1,66 @@
+/* Sidebar Styles */
+.sidebar {
+    -fx-background-color: var(--card-bg);
+    -fx-border-color: var(--border-color);
+    -fx-border-width: 0 1 0 0;
+    -fx-effect: dropshadow(gaussian, var(--shadow-light), 10, 0, 0, 2);
+}
+
+.sidebar-logo {
+    -fx-border-color: var(--border-color);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 24;
+}
+
+.sidebar-logo .label {
+    -fx-text-fill: var(--text-primary);
+}
+
+.sidebar-logo .label-secondary {
+    -fx-text-fill: var(--text-secondary);
+}
+
+.sidebar-menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 12 16;
+    -fx-cursor: hand;
+}
+
+.sidebar-menu-item:hover {
+    -fx-background-color: var(--surface-bg);
+}
+
+.sidebar-menu-item.active {
+    -fx-background-color: var(--accent-primary);
+}
+
+.sidebar-menu-item.active .label {
+    -fx-text-fill: white;
+}
+
+.sidebar-menu-item .label {
+    -fx-text-fill: var(--text-primary);
+    -fx-font-size: 13;
+}
+
+.sidebar-badge {
+    -fx-background-color: var(--accent-tertiary);
+    -fx-text-fill: var(--primary-bg);
+    -fx-background-radius: 10;
+    -fx-padding: 2 6;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.logo-title {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}
+
+.logo-subtitle {
+    -fx-font-size: 12;
+}
+
+.menu-icon {
+    -fx-font-size: 16;
+}

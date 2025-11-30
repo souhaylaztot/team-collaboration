@@ -1,5 +1,7 @@
 package com.smartpropertymanager.components;
 
+import com.smartpropertymanager.utils.ThemeManager;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -8,12 +10,12 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
-import javafx.scene.paint.CycleMethod;
 
 public class StatCard extends HBox {
 
@@ -33,18 +35,18 @@ public class StatCard extends HBox {
         setPadding(new Insets(16));
         setSpacing(12);
         setAlignment(Pos.CENTER_LEFT);
-        setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #E5E7EB; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.06), 10, 0, 0, 4);");
+        getStyleClass().add("stat-card");
 
         VBox left = new VBox(6);
         Label titleLabel = new Label(title);
         titleLabel.setFont(Font.font(13));
-        titleLabel.setStyle("-fx-text-fill: #6B7280;");
+        titleLabel.getStyleClass().add("label-secondary");
 
         HBox valueRow = new HBox(8);
         valueRow.setAlignment(Pos.CENTER_LEFT);
         Label valueLabel = new Label(value);
         valueLabel.setFont(Font.font("System", FontWeight.BOLD, 20));
-        valueLabel.setStyle("-fx-text-fill: #000000;");
+        valueLabel.getStyleClass().add("label");
 
         Label changeLabel = new Label(change);
         changeLabel.setFont(Font.font(12));
@@ -72,7 +74,11 @@ public class StatCard extends HBox {
         HBox.setHgrow(left, Priority.ALWAYS);
 
         // Hover
-        setOnMouseEntered(e -> setStyle("-fx-background-color: linear-gradient(to bottom right, rgba(255,255,255,0.98), rgba(255,255,255,0.95)); -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #D1D5DB; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.12), 18, 0, 0, 6);"));
-        setOnMouseExited(e -> setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #E5E7EB; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.06), 10, 0, 0, 4);"));
+        setOnMouseEntered(e -> setStyle("-fx-background-color: " + (ThemeManager.isDarkMode() ? "#4B5563" : "#F9FAFB") + "; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: " + ThemeManager.getBorderColor() + "; -fx-effect: dropshadow(gaussian, rgba(2,6,23,0.12), 18, 0, 0, 6);"));
+        setOnMouseExited(e -> updateCardStyle());
+    }
+
+    private void updateCardStyle() {
+        setStyle("");
     }
 }

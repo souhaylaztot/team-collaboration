@@ -1,0 +1,39 @@
+/* Light Theme Variables */
+.root {
+    /* Backgrounds */
+    --primary-bg: #F5F5F5;
+    --secondary-bg: #FFFFFF;
+    --surface-bg: #F8FAFC;
+    --card-bg: #FFFFFF;
+    --input-bg: #FFFFFF;
+    
+    /* Text Colors */
+    --text-primary: #333333;
+    --text-secondary: #6B7280;
+    --text-muted: #9CA3AF;
+    
+    /* Borders */
+    --border-color: #E5E7EB;
+    --border-hover: #D1D5DB;
+    
+    /* Buttons */
+    --button-bg: #F9FAFB;
+    --button-text: #374151;
+    --button-hover-bg: #F3F4F6;
+    
+    /* Accent Colors */
+    --accent-primary: #4FD1C5;
+    --accent-secondary: #2C3E8C;
+    --accent-tertiary: #F5C542;
+    
+    /* Status Colors */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: #3B82F6;
+    
+    /* Shadows */
+    --shadow-light: rgba(0,0,0,0.05);
+    --shadow-medium: rgba(0,0,0,0.1);
+    --shadow-heavy: rgba(0,0,0,0.15);
+}

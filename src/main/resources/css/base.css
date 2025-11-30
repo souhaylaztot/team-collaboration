@@ -1,0 +1,124 @@
+/* Base Component Styles */
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Cards */
+.card {
+    -fx-background-color: var(--card-bg);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: var(--border-color);
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 4);
+}
+
+.card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 6);
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: var(--button-bg);
+    -fx-text-fill: var(--button-text);
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 10 20;
+    -fx-font-size: 14;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: var(--button-hover-bg);
+}
+
+.button-primary {
+    -fx-background-color: var(--accent-primary);
+    -fx-text-fill: white;
+}
+
+.button-primary:hover {
+    -fx-background-color: derive(var(--accent-primary), -10%);
+}
+
+/* Text Fields */
+.text-field {
+    -fx-background-color: var(--input-bg);
+    -fx-text-fill: var(--text-primary);
+    -fx-border-color: var(--border-color);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+}
+
+.text-field:focused {
+    -fx-border-color: var(--accent-primary);
+    -fx-border-width: 2;
+}
+
+/* Labels */
+.label {
+    -fx-text-fill: var(--text-primary);
+}
+
+.label-secondary {
+    -fx-text-fill: var(--text-secondary);
+}
+
+.label-muted {
+    -fx-text-fill: var(--text-muted);
+}
+
+/* Tables */
+.table-view {
+    -fx-background-color: var(--card-bg);
+    -fx-border-color: var(--border-color);
+}
+
+.table-view .column-header {
+    -fx-background-color: var(--surface-bg);
+    -fx-text-fill: var(--text-primary);
+}
+
+.table-row-cell {
+    -fx-background-color: var(--card-bg);
+    -fx-text-fill: var(--text-primary);
+}
+
+.table-row-cell:odd {
+    -fx-background-color: var(--surface-bg);
+}
+
+.table-row-cell:selected {
+    -fx-background-color: var(--accent-primary);
+    -fx-text-fill: white;
+}
+
+/* Scrollbars */
+.scroll-bar {
+    -fx-background-color: var(--surface-bg);
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: var(--border-color);
+    -fx-background-radius: 5;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: var(--text-muted);
+}
+
+/* Charts */
+.chart {
+    -fx-background-color: var(--card-bg);
+    -fx-border-color: var(--border-color);
+}
+
+.chart-legend {
+    -fx-background-color: var(--card-bg);
+    -fx-text-fill: var(--text-primary);
+}
+
+.axis {
+    -fx-tick-label-fill: var(--text-secondary);
+}

@@ -1,5 +1,7 @@
 package com.smartpropertymanager.components;
 
+import com.smartpropertymanager.utils.ThemeManager;
+
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,18 +31,19 @@ public class DashboardContent {
         root = new VBox();
         root.setPadding(new Insets(24));
         root.setSpacing(24);
-        root.setStyle("-fx-background-color: #F8FAFC;");
+        root.getStyleClass().add("dashboard-container");
 
         // Header
         Label title = new Label("Dashboard Overview");
         title.setFont(Font.font("System", FontWeight.BOLD, 28));
-        title.setStyle("-fx-text-fill: #000000;");
+        title.getStyleClass().add("label");
 
         Label subtitle = new Label("Welcome back! Here's what's happening with your properties.");
         subtitle.setFont(Font.font(14));
-        subtitle.setStyle("-fx-text-fill: #6B7280;");
+        subtitle.getStyleClass().add("label-secondary");
 
         VBox header = new VBox(6, title, subtitle);
+        header.getStyleClass().add("dashboard-header");
         root.getChildren().add(header);
 
         // Stats grid (4 columns)
@@ -91,18 +94,18 @@ public class DashboardContent {
     private VBox createRevenueBox() {
         VBox container = new VBox(12);
         container.setPadding(new Insets(20));
-        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
+        container.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-radius: 8; -fx-border-color: " + ThemeManager.getBorderColor() + ";");
 
         Label title = new Label("Revenue & Expenses");
         title.setFont(Font.font("System", FontWeight.BOLD, 16));
-        title.setStyle("-fx-text-fill: #000000;");
+        title.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + ";");
 
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setCategories(javafx.collections.FXCollections.observableArrayList("Jan", "Feb", "Mar", "Apr", "May", "Jun"));
-        xAxis.setTickLabelFill(Color.web("#6B7280"));
+        xAxis.setTickLabelFill(Color.web(ThemeManager.getSecondaryTextColor()));
 
         NumberAxis yAxis = new NumberAxis(0, 10000000, 2500000);
-        yAxis.setTickLabelFill(Color.web("#6B7280"));
+        yAxis.setTickLabelFill(Color.web(ThemeManager.getSecondaryTextColor()));
 
         BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
         chart.setLegendVisible(true);
@@ -166,12 +169,12 @@ public class DashboardContent {
     private VBox createOccupancyBox() {
         VBox container = new VBox(12);
         container.setPadding(new Insets(20));
-        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
+        container.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-radius: 8; -fx-border-color: " + ThemeManager.getBorderColor() + ";");
         container.setMinWidth(240);
 
         Label title = new Label("Occupancy Rate");
         title.setFont(Font.font("System", FontWeight.BOLD, 16));
-        title.setStyle("-fx-text-fill: #000000;");
+        title.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + ";");
 
         int occupied = 142;
         int available = 14;
@@ -188,16 +191,16 @@ public class DashboardContent {
         StackPane donut = new StackPane();
         donut.setPrefSize(200, 200);
 
-        Circle inner = new Circle(64, Color.web("#F8FAFC"));
+        Circle inner = new Circle(64, Color.web(ThemeManager.getBackgroundColor()));
         inner.setStroke(Color.TRANSPARENT);
 
         Label centerNum = new Label(String.valueOf(occupied));
         centerNum.setFont(Font.font("System", FontWeight.BOLD, 20));
-        centerNum.setStyle("-fx-text-fill: #000000;");
+        centerNum.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + ";");
 
         Label centerSub = new Label("Occupied\n(" + String.format("%.0f", pct) + "% )");
         centerSub.setFont(Font.font(12));
-        centerSub.setStyle("-fx-text-fill: #6B7280;");
+        centerSub.setStyle("-fx-text-fill: " + ThemeManager.getSecondaryTextColor() + ";");
 
         VBox centerBox = new VBox(2, centerNum, centerSub);
         centerBox.setAlignment(Pos.CENTER);
@@ -218,11 +221,11 @@ public class DashboardContent {
     private VBox createActivitiesPanel() {
         VBox container = new VBox(12);
         container.setPadding(new Insets(20));
-        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
+        container.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-radius: 8; -fx-border-color: " + ThemeManager.getBorderColor() + ";");
 
         Label title = new Label("Recent Activities");
         title.setFont(Font.font("System", FontWeight.BOLD, 16));
-        title.setStyle("-fx-text-fill: #000000;");
+        title.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + ";");
 
         VBox list = new VBox(12);
         list.getChildren().addAll(
@@ -247,14 +250,14 @@ public class DashboardContent {
 
         Circle dot = new Circle(6, dotColor);
         Label lbl = new Label(text);
-        lbl.setStyle("-fx-text-fill: #000000; -fx-font-size: 13;");
+        lbl.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + "; -fx-font-size: 13;");
         lbl.setWrapText(true);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label timeLbl = new Label(time);
-        timeLbl.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12;");
+        timeLbl.setStyle("-fx-text-fill: " + ThemeManager.getSecondaryTextColor() + "; -fx-font-size: 12;");
 
         row.getChildren().addAll(dot, lbl, spacer, timeLbl);
         return row;
@@ -263,11 +266,11 @@ public class DashboardContent {
     private VBox createTasksPanel() {
         VBox container = new VBox(12);
         container.setPadding(new Insets(20));
-        container.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #E5E7EB;");
+        container.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-radius: 8; -fx-border-color: " + ThemeManager.getBorderColor() + ";");
 
         Label title = new Label("Upcoming Tasks");
         title.setFont(Font.font("System", FontWeight.BOLD, 16));
-        title.setStyle("-fx-text-fill: #000000;");
+        title.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + ";");
 
         VBox list = new VBox(12);
         list.getChildren().addAll(
@@ -291,14 +294,14 @@ public class DashboardContent {
 
         CheckBox cb = new CheckBox();
         Label lbl = new Label(text);
-        lbl.setStyle("-fx-text-fill: #000000; -fx-font-size: 13;");
+        lbl.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + "; -fx-font-size: 13;");
         lbl.setWrapText(true);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label dateLbl = new Label(date);
-        dateLbl.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12;");
+        dateLbl.setStyle("-fx-text-fill: " + ThemeManager.getSecondaryTextColor() + "; -fx-font-size: 12;");
 
         Label badge = new Label();
         badge.setStyle("-fx-text-fill: white; -fx-padding: 4 10; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold;");
@@ -319,6 +322,36 @@ public class DashboardContent {
 
         row.getChildren().addAll(cb, lbl, spacer, dateLbl, badge);
         return row;
+    }
+
+    public void refreshTheme() {
+        root.setStyle("-fx-background-color: " + ThemeManager.getBackgroundColor() + ";");
+        
+        // Refresh all StatCards and VBox containers
+        root.getChildren().forEach(node -> {
+            if (node instanceof HBox) {
+                HBox hbox = (HBox) node;
+                hbox.getChildren().forEach(child -> {
+                    if (child instanceof VBox) {
+                        refreshVBoxStyle((VBox) child);
+                    }
+                });
+            }
+        });
+    }
+
+    private void refreshVBoxStyle(VBox vbox) {
+        vbox.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + "; -fx-border-radius: 8; -fx-border-color: " + ThemeManager.getBorderColor() + ";");
+        vbox.getChildren().forEach(child -> {
+            if (child instanceof Label) {
+                Label label = (Label) child;
+                if (label.getStyle().contains("label-secondary")) {
+                    label.setStyle("-fx-text-fill: " + ThemeManager.getSecondaryTextColor() + ";");
+                } else {
+                    label.setStyle("-fx-text-fill: " + ThemeManager.getTextColor() + ";");
+                }
+            }
+        });
     }
 
     public VBox getRoot() {

@@ -2,6 +2,8 @@ package com.smartpropertymanager.components;
 
 import java.util.function.Consumer;
 
+import com.smartpropertymanager.utils.ThemeManager;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -16,7 +18,7 @@ public class Sidebar {
     public Sidebar() {
         root = new VBox();
         root.setPrefWidth(250);
-        root.setStyle("-fx-background-color: white; -fx-border-color: #EEEEEE; -fx-border-width: 0 1 0 0;");
+        root.getStyleClass().add("sidebar");
         root.setSpacing(0);
 
         // Logo
@@ -47,7 +49,7 @@ public class Sidebar {
     private HBox createLogoSection() {
         HBox logoBox = new HBox(10);
         logoBox.setPadding(new Insets(20));
-        logoBox.setStyle("-fx-border-color: #EEEEEE; -fx-border-width: 0 0 1 0;");
+        logoBox.getStyleClass().add("sidebar-logo");
         logoBox.setAlignment(Pos.CENTER_LEFT);
 
         Label logoIcon = new Label("🏢");
@@ -55,9 +57,9 @@ public class Sidebar {
 
         VBox logoText = new VBox(2);
         Label title = new Label("Smart Property");
-        title.setStyle("-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        title.getStyleClass().addAll("label", "logo-title");
         Label subtitle = new Label("Manager Pro");
-        subtitle.setStyle("-fx-font-size: 12; -fx-text-fill: #999999;");
+        subtitle.getStyleClass().addAll("label-secondary", "logo-subtitle");
         logoText.getChildren().addAll(title, subtitle);
 
         logoBox.getChildren().addAll(logoIcon, logoText);
@@ -69,20 +71,19 @@ public class Sidebar {
         item.setPadding(new Insets(15, 20, 15, 20));
         item.setAlignment(Pos.CENTER_LEFT);
         item.setCursor(javafx.scene.Cursor.HAND);
-        item.setStyle(active ? "-fx-background-color: #F0F0F0;" : "-fx-background-color: white;");
+        item.getStyleClass().add("sidebar-menu-item");
+        if (active) item.getStyleClass().add("active");
         item.setUserData(text);
 
         Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 16;");
+        iconLabel.getStyleClass().add("menu-icon");
 
         Label textLabel = new Label(text);
-        textLabel.setStyle("-fx-font-size: 13; -fx-text-fill: #333333;");
+        textLabel.getStyleClass().add("label");
 
         item.getChildren().addAll(iconLabel, textLabel);
 
         item.setOnMouseClicked(e -> handleMenuClick(item));
-        item.setOnMouseEntered(e -> item.setStyle("-fx-background-color: #FAFAFA;"));
-        item.setOnMouseExited(e -> updateItemStyle(item));
 
         return item;
     }
@@ -92,25 +93,25 @@ public class Sidebar {
         item.setPadding(new Insets(15, 20, 15, 20));
         item.setAlignment(Pos.CENTER_LEFT);
         item.setCursor(javafx.scene.Cursor.HAND);
-        item.setStyle(active ? "-fx-background-color: #F0F0F0;" : "-fx-background-color: white;");
+        item.setStyle(active ? "-fx-background-color: #F0F0F0;" : "-fx-background-color: " + ThemeManager.getCardBackgroundColor() + ";");
         item.setUserData(text);
 
         Label iconLabel = new Label(icon);
         iconLabel.setStyle("-fx-font-size: 16;");
 
         Label textLabel = new Label(text);
-        textLabel.setStyle("-fx-font-size: 13; -fx-text-fill: #333333;");
+        textLabel.setStyle("-fx-font-size: 13; -fx-text-fill: " + ThemeManager.getTextColor() + ";");
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
         Label badgeLabel = new Label(badge);
-        badgeLabel.setStyle("-fx-background-color: #FFA500; -fx-text-fill: white; -fx-padding: 3 8; -fx-border-radius: 10; -fx-font-size: 11; -fx-font-weight: bold;");
+        badgeLabel.getStyleClass().add("sidebar-badge");
 
         item.getChildren().addAll(iconLabel, textLabel, spacer, badgeLabel);
 
         item.setOnMouseClicked(e -> handleMenuClick(item));
-        item.setOnMouseEntered(e -> item.setStyle("-fx-background-color: #FAFAFA;"));
+        item.setOnMouseEntered(e -> item.setStyle("-fx-background-color: " + (ThemeManager.isDarkMode() ? "#4B5563" : "#FAFAFA") + ";"));
         item.setOnMouseExited(e -> updateItemStyle(item));
 
         return item;
@@ -123,10 +124,10 @@ public class Sidebar {
 
             // Update active state
             if (activeMenuItem != null) {
-                updateItemStyle(activeMenuItem);
+                activeMenuItem.getStyleClass().remove("active");
             }
             activeMenuItem = item;
-            item.setStyle("-fx-background-color: #F0F0F0;");
+            item.getStyleClass().add("active");
         }
     }
 
@@ -134,9 +135,11 @@ public class Sidebar {
         if (item == activeMenuItem) {
             item.setStyle("-fx-background-color: #F0F0F0;");
         } else {
-            item.setStyle("-fx-background-color: white;");
+            item.setStyle("-fx-background-color: " + ThemeManager.getCardBackgroundColor() + ";");
         }
     }
+
+    // Theme refresh no longer needed - CSS handles it automatically
 
     public void setOnMenuItemClick(Consumer<String> callback) {
         this.onMenuItemClick = callback;

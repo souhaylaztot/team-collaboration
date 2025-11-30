@@ -7,6 +7,7 @@ com\smartpropertymanager\models\Apartment.class
 com\smartpropertymanager\components\DashboardContent.class
 com\smartpropertymanager\components\StatCard.class
 com\smartpropertymanager\pages\SettingsPage.class
+com\smartpropertymanager\utils\LanguageManager.class
 com\smartpropertymanager\models\Permit.class
 module-info.class
 com\smartpropertymanager\Main.class
@@ -24,6 +25,7 @@ com\smartpropertymanager\components\Sidebar.class
 com\smartpropertymanager\pages\BuyerManagementPage$1.class
 com\smartpropertymanager\pages\BuyerManagementPage$2.class
 com\smartpropertymanager\pages\LoginPage.class
+com\smartpropertymanager\utils\ThemeManager.class
 com\smartpropertymanager\pages\LandManagementPage.class
 com\smartpropertymanager\pages\ReportsAnalyticsPage.class
 com\smartpropertymanager\pages\RequestCenterPage.class

@@ -1,0 +1,39 @@
+/* Dark Theme Variables */
+.root {
+    /* Backgrounds */
+    --primary-bg: #1a1a1a;
+    --secondary-bg: #2d2d2d;
+    --surface-bg: #252525;
+    --card-bg: #2d2d2d;
+    --input-bg: #252525;
+    
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0e0;
+    --text-muted: #b0b0b0;
+    
+    /* Borders */
+    --border-color: #404040;
+    --border-hover: #525252;
+    
+    /* Buttons */
+    --button-bg: #404040;
+    --button-text: #ffffff;
+    --button-hover-bg: #525252;
+    
+    /* Accent Colors */
+    --accent-primary: #4FD1C5;
+    --accent-secondary: #2C3E8C;
+    --accent-tertiary: #F5C542;
+    
+    /* Status Colors */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: #3B82F6;
+    
+    /* Shadows */
+    --shadow-light: rgba(0,0,0,0.2);
+    --shadow-medium: rgba(0,0,0,0.3);
+    --shadow-heavy: rgba(0,0,0,0.4);
+}
