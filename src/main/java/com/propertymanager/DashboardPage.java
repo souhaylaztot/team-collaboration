@@ -22,17 +22,19 @@ public class DashboardPage extends VBox {
     }
     
     private void initDashboard() {
-        setPadding(new Insets(20));
-        setSpacing(20);
-        setStyle("-fx-background-color: #f8f9fa;");
+        setPadding(new Insets(0));
+        setSpacing(0);
+        // خلفية متدرجة احترافية مع عناصر بصرية
+        setStyle("-fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); -fx-background-size: 400% 400%; -fx-background-position: 0% 50%;");
         
         // Wrap everything in ScrollPane for better visibility
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background-color: transparent;");
         
-        VBox content = new VBox(20);
-        content.setPadding(new Insets(10));
+        VBox content = new VBox(30);
+        content.setPadding(new Insets(40));
+        content.setStyle("-fx-background-color: rgba(255, 255, 255, 0.05); -fx-background-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 20, 0, 0, 5);");
         
         // Header
         VBox header = createHeader();
@@ -48,7 +50,12 @@ public class DashboardPage extends VBox {
         
         content.getChildren().addAll(header, statsRow, chartsRow, activitiesRow);
         scrollPane.setContent(content);
-        getChildren().add(scrollPane);
+        
+        // إضافة عناصر الخلفية التزيينية
+        StackPane mainContainer = new StackPane();
+        mainContainer.getChildren().addAll(createBackgroundElements(), scrollPane);
+        
+        getChildren().add(mainContainer);
     }
     
     private VBox createHeader() {
@@ -85,7 +92,7 @@ public class DashboardPage extends VBox {
         card.setPrefWidth(280);
         card.setPrefHeight(120);
         card.setPadding(new Insets(20));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
+        card.setStyle("-fx-background-color: rgba(255, 255, 255, 0.95); -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5); -fx-border-color: rgba(255,255,255,0.3); -fx-border-width: 1; -fx-border-radius: 20;");
         
         HBox content = new HBox();
         content.setAlignment(Pos.CENTER_LEFT);
@@ -358,5 +365,51 @@ public class DashboardPage extends VBox {
         item.getChildren().addAll(checkBox, textBox);
         
         return item;
+    }
+    
+    private StackPane createBackgroundElements() {
+        StackPane backgroundElements = new StackPane();
+        backgroundElements.setMouseTransparent(true);
+        
+        // إضافة دوائر تزيينية
+        VBox decorativeElements = new VBox();
+        decorativeElements.setAlignment(Pos.TOP_RIGHT);
+        decorativeElements.setPadding(new Insets(50, 50, 0, 0));
+        
+        // دائرة كبيرة شفافة
+        Label bigCircle = new Label("🏢");
+        bigCircle.setStyle("-fx-font-size: 120px; -fx-text-fill: rgba(255,255,255,0.1); -fx-rotate: 15;");
+        
+        // عناصر تزيينية إضافية
+        HBox topDecorations = new HBox(30);
+        topDecorations.setAlignment(Pos.TOP_RIGHT);
+        topDecorations.setPadding(new Insets(100, 100, 0, 0));
+        
+        Label building1 = new Label("🏠");
+        building1.setStyle("-fx-font-size: 60px; -fx-text-fill: rgba(255,255,255,0.08); -fx-rotate: -10;");
+        
+        Label building2 = new Label("🏘️");
+        building2.setStyle("-fx-font-size: 80px; -fx-text-fill: rgba(255,255,255,0.06); -fx-rotate: 20;");
+        
+        topDecorations.getChildren().addAll(building1, building2);
+        
+        // عناصر سفلية
+        VBox bottomElements = new VBox();
+        bottomElements.setAlignment(Pos.BOTTOM_LEFT);
+        bottomElements.setPadding(new Insets(0, 0, 80, 80));
+        
+        Label keys = new Label("🗝️");
+        keys.setStyle("-fx-font-size: 70px; -fx-text-fill: rgba(255,255,255,0.07); -fx-rotate: -25;");
+        
+        bottomElements.getChildren().add(keys);
+        
+        // تجميع العناصر
+        StackPane.setAlignment(bigCircle, Pos.TOP_RIGHT);
+        StackPane.setAlignment(topDecorations, Pos.TOP_RIGHT);
+        StackPane.setAlignment(bottomElements, Pos.BOTTOM_LEFT);
+        
+        backgroundElements.getChildren().addAll(bigCircle, topDecorations, bottomElements);
+        
+        return backgroundElements;
     }
 }

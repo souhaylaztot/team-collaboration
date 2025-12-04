@@ -14,6 +14,13 @@ public class MainApp extends Application {
     private BorderPane root;
     private Sidebar sidebar;
     private TopBar topBar;
+    private String userType = "Admin User";
+    
+    public MainApp() {}
+    
+    public MainApp(String userType) {
+        this.userType = userType;
+    }
     
     @Override
     public void start(Stage primaryStage) {
@@ -29,7 +36,7 @@ public class MainApp extends Application {
         
         // Create components
         sidebar = new Sidebar(this);
-        topBar = new TopBar();
+        topBar = new TopBar(userType, this);
         
         // Layout
         root.setLeft(sidebar);
@@ -140,10 +147,21 @@ public class MainApp extends Application {
             case "Settings":
                 wrapper.getChildren().add(new SettingsPage());
                 break;
+            case "AdminProfile":
+                wrapper.getChildren().add(new AdminProfilePage());
+                break;
+            case "UserProfile":
+                wrapper.getChildren().add(new UserProfilePage());
+                break;
         }
         
         scrollPane.setContent(wrapper);
         root.setCenter(scrollPane);
+    }
+    
+    public void startWithUserType(Stage stage, String userType) throws Exception {
+        this.userType = userType;
+        start(stage);
     }
     
     public static void main(String[] args) {

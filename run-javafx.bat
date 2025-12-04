@@ -6,7 +6,7 @@ javac --module-path "lib" --add-modules javafx.controls,javafx.fxml -d "target/c
 if %ERRORLEVEL% EQU 0 (
     echo Compilation successful!
     echo Running JavaFX Application...
-    java --module-path "lib" --add-modules javafx.controls,javafx.fxml -cp "target/classes" com.propertymanager.RequestCenter
+    java --module-path "lib" --add-modules javafx.controls,javafx.fxml --enable-native-access=javafx.graphics -Djava.library.path="lib" -Djava.awt.headless=false -Dprism.order=sw -cp "target/classes" com.propertymanager.MainApp
 ) else (
     echo Compilation failed!
     pause

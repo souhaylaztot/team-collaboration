@@ -16,8 +16,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TopBar extends HBox {
+    private String userType = "Admin User";
+    private MainApp mainApp;
     
     public TopBar() {
+        initTopBar();
+    }
+    
+    public TopBar(String userType) {
+        this.userType = userType;
+        initTopBar();
+    }
+    
+    public TopBar(String userType, MainApp mainApp) {
+        this.userType = userType;
+        this.mainApp = mainApp;
         initTopBar();
     }
     
@@ -62,14 +75,19 @@ public class TopBar extends HBox {
         Button userBtn = new Button("👤");
         userBtn.setStyle("-fx-background-color: #007bff; -fx-text-fill: white; -fx-background-radius: 20; -fx-font-size: 16px; -fx-padding: 8;");
         
-        Label userName = new Label("Admin User");
+        Label userName = new Label(userType);
         userName.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         
-        Label userRole = new Label("Administrator");
+        String roleText = userType.equals("Admin User") ? "Administrator" : "User";
+        Label userRole = new Label(roleText);
         userRole.setFont(Font.font("Arial", 12));
         userRole.setTextFill(Color.GRAY);
         
         userProfile.getChildren().addAll(userBtn, userName);
+        
+        // Add click handler for user profile
+        userProfile.setOnMouseClicked(e -> showUserProfilePopup(userProfile));
+        userProfile.setStyle("-fx-cursor: hand;");
         
         getChildren().addAll(searchField, spacer, notificationBox, themeBtn, userProfile);
     }
@@ -101,6 +119,135 @@ public class TopBar extends HBox {
         });
         
         popup.show();
+    }
+    
+    private void showUserProfilePopup(HBox userProfile) {
+        Stage popup = new Stage();
+        popup.initStyle(StageStyle.TRANSPARENT);
+        popup.setWidth(300);
+        popup.setHeight(250);
+        popup.setResizable(false);
+        
+        VBox content = createUserProfileContent();
+        
+        Scene scene = new Scene(content, 300, 200);
+        scene.setFill(null);
+        popup.setScene(scene);
+        
+        // Position near the user profile
+        popup.setX(userProfile.getScene().getWindow().getX() + userProfile.getScene().getWindow().getWidth() - 320);
+        popup.setY(userProfile.getScene().getWindow().getY() + 100);
+        
+        // Close when clicking outside
+        popup.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (!isNowFocused) {
+                popup.close();
+            }
+        });
+        
+        popup.show();
+    }
+    
+    private VBox createUserProfileContent() {
+        VBox content = new VBox(0);
+        content.setStyle("-fx-background-color: rgba(255, 255, 255, 0.95); -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 5);");
+        
+        // Header with user info
+        VBox header = new VBox(10);
+        header.setPadding(new Insets(20));
+        header.setAlignment(Pos.CENTER);
+        header.setStyle("-fx-border-color: #e5e7eb; -fx-border-width: 0 0 1 0;");
+        
+        Button userIcon = new Button("👤");
+        userIcon.setStyle("-fx-background-color: #007bff; -fx-text-fill: white; -fx-background-radius: 25; -fx-font-size: 20px; -fx-padding: 10;");
+        userIcon.setPrefSize(50, 50);
+        
+        Label userName = new Label(userType);
+        userName.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
+        userName.setTextFill(Color.web("#111827"));
+        
+        String roleText = userType.equals("Admin User") ? "Administrator" : "User";
+        Label userRole = new Label(roleText);
+        userRole.setFont(Font.font("Segoe UI", 12));
+        userRole.setTextFill(Color.web("#6b7280"));
+        
+        header.getChildren().addAll(userIcon, userName, userRole);
+        
+        // Menu options
+        VBox menu = new VBox(0);
+        
+        Button profileBtn = createMenuButton("👤", "Profile Settings");
+        Button logoutBtn = createMenuButton("🚪", "Log Out");
+        
+        profileBtn.setOnAction(e -> {
+            openProfilePage();
+            ((Stage) profileBtn.getScene().getWindow()).close();
+        });
+        
+        logoutBtn.setOnAction(e -> {
+            handleLogout();
+            ((Stage) logoutBtn.getScene().getWindow()).close();
+        });
+        
+        menu.getChildren().addAll(profileBtn, logoutBtn);
+        
+        content.getChildren().addAll(header, menu);
+        return content;
+    }
+    
+    private Button createMenuButton(String icon, String text) {
+        Button btn = new Button();
+        btn.setPrefWidth(300);
+        btn.setPrefHeight(50);
+        btn.setAlignment(Pos.CENTER_LEFT);
+        btn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-cursor: hand; -fx-padding: 15 20;");
+        
+        HBox content = new HBox(15);
+        content.setAlignment(Pos.CENTER_LEFT);
+        
+        Label iconLabel = new Label(icon);
+        iconLabel.setFont(Font.font(18));
+        
+        Label textLabel = new Label(text);
+        textLabel.setFont(Font.font("Segoe UI", 14));
+        textLabel.setTextFill(Color.web("#374151"));
+        
+        content.getChildren().addAll(iconLabel, textLabel);
+        btn.setGraphic(content);
+        
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #f3f4f6; -fx-border-color: transparent; -fx-cursor: hand; -fx-padding: 15 20;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-cursor: hand; -fx-padding: 15 20;"));
+        
+        return btn;
+    }
+    
+    private void handleLogout() {
+        try {
+            // Close current window
+            Stage currentStage = (Stage) this.getScene().getWindow();
+            currentStage.close();
+            
+            // Open login page
+            LoginPage loginPage = new LoginPage();
+            Stage loginStage = new Stage();
+            loginPage.start(loginStage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void openProfilePage() {
+        try {
+            if (mainApp != null) {
+                if (userType.equals("Admin User")) {
+                    mainApp.showPage("AdminProfile");
+                } else {
+                    mainApp.showPage("UserProfile");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     private VBox createNotificationContent() {
@@ -303,5 +450,4 @@ public class TopBar extends HBox {
             this.type = type;
         }
     }
-
 }
