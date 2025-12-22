@@ -10,6 +10,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,24 +34,76 @@ public class TransportationPage extends VBox {
     }
     
     private void initData() {
-        // Worker transports
         workerTransports = new ArrayList<>();
-        workerTransports.add(new WorkerTransport("1", "TR-1001", "Michael Rodriguez", 12, "Central Station", "Riverside Construction Site", "06:00 AM", "06:45 AM", "completed", "2025-11-08"));
-        workerTransports.add(new WorkerTransport("2", "TR-1002", "Sarah Johnson", 8, "North Hub", "Downtown Tower Project", "07:00 AM", "07:30 AM", "in-transit", "2025-11-08"));
-        workerTransports.add(new WorkerTransport("3", "TR-1003", "James Chen", 15, "South Depot", "Harbor Bridge Construction", "08:00 AM", "09:00 AM", "scheduled", "2025-11-08"));
-        
-        // Material transports
         materialTransports = new ArrayList<>();
-        materialTransports.add(new MaterialTransport("1", "MT-2001", "Robert Williams", "Steel Beams", "5000", "kg", "Steel Factory - East", "Riverside Construction Site", "05:00 AM", "07:30 AM", "delivered", "2025-11-08", "critical"));
-        materialTransports.add(new MaterialTransport("2", "MT-2002", "Emily Davis", "Lumber (Pine Wood)", "300", "units", "Timber Warehouse", "Downtown Tower Project", "06:30 AM", "08:00 AM", "in-transit", "2025-11-08", "urgent"));
-        materialTransports.add(new MaterialTransport("3", "MT-2003", "David Martinez", "Concrete Mix", "8000", "kg", "Concrete Plant - West", "Harbor Bridge Construction", "07:00 AM", "08:30 AM", "loading", "2025-11-08", "critical"));
-        
-        // Vehicles
         vehicles = new ArrayList<>();
-        vehicles.add(new Vehicle("1", "TR-1001", "passenger", "20 passengers", "in-use", "2025-10-15", "2025-12-15"));
-        vehicles.add(new Vehicle("2", "MT-2001", "cargo-truck", "10 tons", "in-use", "2025-10-20", "2025-12-20"));
-        vehicles.add(new Vehicle("3", "MT-2003", "mixer", "8 cubic meters", "available", "2025-11-01", "2026-01-01"));
-        vehicles.add(new Vehicle("4", "MT-2006", "flatbed", "15 tons", "maintenance", "2025-11-05", "2025-11-15"));
+        loadTransportationDataFromDatabase();
+    }
+    
+    private void loadTransportationDataFromDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Load vehicles
+            String vehicleQuery = "SELECT id, vehicle_number, vehicle_type, capacity, status, last_maintenance_date, next_maintenance_date FROM vehicles";
+            try (PreparedStatement stmt = conn.prepareStatement(vehicleQuery)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    vehicles.add(new Vehicle(
+                        rs.getString("id"),
+                        rs.getString("vehicle_number"),
+                        rs.getString("vehicle_type"),
+                        rs.getString("capacity"),
+                        rs.getString("status"),
+                        rs.getDate("last_maintenance_date").toString(),
+                        rs.getDate("next_maintenance_date").toString()
+                    ));
+                }
+            }
+            
+            // Load worker transports
+            String workerQuery = "SELECT wt.id, v.vehicle_number, wt.driver_name, wt.worker_count, wt.pickup_point, wt.destination, wt.departure_time, wt.arrival_time, wt.status, wt.transport_date FROM worker_transports wt JOIN vehicles v ON wt.vehicle_id = v.id";
+            try (PreparedStatement stmt = conn.prepareStatement(workerQuery)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    workerTransports.add(new WorkerTransport(
+                        rs.getString("id"),
+                        rs.getString("vehicle_number"),
+                        rs.getString("driver_name"),
+                        rs.getInt("worker_count"),
+                        rs.getString("pickup_point"),
+                        rs.getString("destination"),
+                        rs.getString("departure_time"),
+                        rs.getString("arrival_time"),
+                        rs.getString("status"),
+                        rs.getDate("transport_date").toString()
+                    ));
+                }
+            }
+            
+            // Load material transports
+            String materialQuery = "SELECT mt.id, v.vehicle_number, mt.driver_name, mt.material_type, mt.quantity, mt.unit, mt.origin, mt.destination, mt.departure_time, mt.estimated_arrival, mt.status, mt.transport_date, mt.urgency FROM material_transports mt JOIN vehicles v ON mt.vehicle_id = v.id";
+            try (PreparedStatement stmt = conn.prepareStatement(materialQuery)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    materialTransports.add(new MaterialTransport(
+                        rs.getString("id"),
+                        rs.getString("vehicle_number"),
+                        rs.getString("driver_name"),
+                        rs.getString("material_type"),
+                        rs.getString("quantity"),
+                        rs.getString("unit"),
+                        rs.getString("origin"),
+                        rs.getString("destination"),
+                        rs.getString("departure_time"),
+                        rs.getString("estimated_arrival"),
+                        rs.getString("status"),
+                        rs.getDate("transport_date").toString(),
+                        rs.getString("urgency")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     private void initPage() {

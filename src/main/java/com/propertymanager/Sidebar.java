@@ -2,6 +2,7 @@ package com.propertymanager;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -10,18 +11,22 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-public class Sidebar extends VBox {
+public class Sidebar extends VBox implements LocalizationService.LocalizableComponent {
     
     private MainApp mainApp;
+    private LocalizationService localizationService;
+    private VBox menuContainer;
     
     public Sidebar(MainApp mainApp) {
         this.mainApp = mainApp;
+        this.localizationService = LocalizationService.getInstance();
+        localizationService.addLanguageChangeListener(locale -> updateLanguage());
         initSidebar();
     }
     
     private void initSidebar() {
         setPrefWidth(250);
-        setStyle("-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 0 1 0 0;");
+        updateTheme();
         setPadding(new Insets(20));
         setSpacing(10);
         
@@ -34,9 +39,10 @@ public class Sidebar extends VBox {
         VBox logoText = new VBox();
         Label title = new Label("Smart Property");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        title.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         Label subtitle = new Label("Manager Pro");
         subtitle.setFont(Font.font("Arial", 12));
-        subtitle.setTextFill(Color.GRAY);
+        subtitle.setTextFill(Color.web(ThemeManager.getTextSecondary()));
         logoText.getChildren().addAll(title, subtitle);
         
         logo.getChildren().addAll(logoIcon, logoText);
@@ -74,6 +80,7 @@ public class Sidebar extends VBox {
         
         Label textLabel = new Label(text);
         textLabel.setFont(Font.font("Arial", 14));
+        textLabel.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         
         content.getChildren().addAll(iconLabel, textLabel);
         
@@ -86,24 +93,24 @@ public class Sidebar extends VBox {
         btn.setGraphic(content);
         btn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-cursor: hand;");
         
-        // تحسين التفاعل البصري
+        // Theme-aware hover effects
         btn.setOnMouseEntered(e -> {
-            btn.setStyle("-fx-background-color: #e9ecef; -fx-background-radius: 8; -fx-cursor: hand;");
+            btn.setStyle("-fx-background-color: " + ThemeManager.getHover() + "; -fx-background-radius: 8; -fx-cursor: hand;");
         });
         
         btn.setOnMouseExited(e -> {
             btn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-cursor: hand;");
+            textLabel.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         });
         
         btn.setOnMousePressed(e -> {
-            btn.setStyle("-fx-background-color: #2C3E8C; -fx-background-radius: 8; -fx-cursor: hand;");
-            // تغيير لون النص عند الضغط
-            textLabel.setTextFill(Color.WHITE);
+            btn.setStyle("-fx-background-color: " + ThemeManager.getPrimary() + "; -fx-background-radius: 8; -fx-cursor: hand;");
+            textLabel.setTextFill(Color.web("#FFFFFF"));
         });
         
         btn.setOnMouseReleased(e -> {
-            btn.setStyle("-fx-background-color: #e9ecef; -fx-background-radius: 8; -fx-cursor: hand;");
-            textLabel.setTextFill(Color.BLACK);
+            btn.setStyle("-fx-background-color: " + ThemeManager.getHover() + "; -fx-background-radius: 8; -fx-cursor: hand;");
+            textLabel.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         });
         
         btn.setOnAction(e -> {
@@ -115,10 +122,44 @@ public class Sidebar extends VBox {
         
         return btn;
     }
+
+    
+    private void updateMenuItems() {
+        if (menuContainer == null) {
+            menuContainer = new VBox(10);
+            getChildren().add(menuContainer);
+        }
+        
+        menuContainer.getChildren().clear();
+        menuContainer.getChildren().addAll(
+            createMenuItem("🏠", localizationService.getMenuText("dashboard"), ""),
+            createMenuItem("🏢", localizationService.getMenuText("buildings"), ""),
+            createMenuItem("👥", localizationService.getMenuText("buyers"), "3"),
+            createMenuItem("🌞️", localizationService.getMenuText("lands"), ""),
+            createMenuItem("📋", localizationService.getMenuText("permits"), "2"),
+            createMenuItem("🔧", localizationService.getMenuText("maintenance"), "5"),
+            createMenuItem("📊", localizationService.getMenuText("reports"), ""),
+            createMenuItem("📝", localizationService.getMenuText("requests"), "4"),
+            createMenuItem("🚛", localizationService.getMenuText("transportation"), ""),
+            createSpacer(30),
+            createMenuItem("⚙️", localizationService.getMenuText("settings"), ""),
+            createMenuItem("🚺", localizationService.getMenuText("logout"), "")
+        );
+    }
+    
+    @Override
+    public void updateLanguage() {
+        updateMenuItems();
+        System.out.println("Sidebar language updated to: " + localizationService.getCurrentLanguageName());
+    }
     
     private VBox createSpacer(double height) {
         VBox spacer = new VBox();
         spacer.setPrefHeight(height);
         return spacer;
+    }
+    
+    public void updateTheme() {
+        setStyle("-fx-background-color: " + ThemeManager.getSidebar() + "; -fx-border-color: " + ThemeManager.getBorder() + "; -fx-border-width: 0 1 0 0;");
     }
 }

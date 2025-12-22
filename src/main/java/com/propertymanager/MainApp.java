@@ -15,6 +15,8 @@ public class MainApp extends Application {
     private Sidebar sidebar;
     private TopBar topBar;
     private String userType = "Admin User";
+    private String currentUserEmail;
+    private String currentUserName;
     
     public MainApp() {}
     
@@ -22,17 +24,36 @@ public class MainApp extends Application {
         this.userType = userType;
     }
     
+    public MainApp(String userType, String userEmail, String userName) {
+        this.userType = userType;
+        this.currentUserEmail = userEmail;
+        this.currentUserName = userName;
+    }
+    
     @Override
     public void start(Stage primaryStage) {
+        // Force light theme
+        ThemeManager.applyLightTheme();
+        
+        // Test database connection
+        try {
+            DatabaseManager.getConnection().close();
+            System.out.println("✓ Database connected successfully!");
+        } catch (Exception e) {
+            System.err.println("✗ Database connection failed: " + e.getMessage());
+        }
+        
         primaryStage.setTitle("Smart Property Manager Pro");
         
         // Create main container with window controls
         VBox mainContainer = new VBox();
+        mainContainer.setStyle("-fx-background-color: #F8FAFC;");
         
         // Window controls bar (smaller)
         HBox windowControls = createWindowControls(primaryStage);
         
         root = new BorderPane();
+        root.setStyle("-fx-background-color: #F8FAFC;");
         
         // Create components
         sidebar = new Sidebar(this);
@@ -46,10 +67,11 @@ public class MainApp extends Application {
         ScrollPane initialScroll = new ScrollPane();
         initialScroll.setFitToWidth(true);
         initialScroll.setFitToHeight(true);
-        initialScroll.setStyle("-fx-background-color: transparent;");
+        initialScroll.setStyle("-fx-background-color: #F8FAFC; -fx-background: #F8FAFC;");
         
         VBox initialWrapper = new VBox();
         initialWrapper.setPadding(new Insets(0, 0, 50, 0));
+        initialWrapper.setStyle("-fx-background-color: #F8FAFC;");
         initialWrapper.getChildren().add(new DashboardPage());
         initialScroll.setContent(initialWrapper);
         
@@ -59,6 +81,10 @@ public class MainApp extends Application {
         VBox.setVgrow(root, Priority.ALWAYS);
         
         Scene scene = new Scene(mainContainer, 1400, 900);
+        scene.getStylesheets().add(getClass().getResource("/styles/global.css").toExternalForm());
+        
+        scene.setFill(javafx.scene.paint.Color.web("#F8FAFC"));
+        
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -110,11 +136,12 @@ public class MainApp extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setStyle("-fx-background-color: transparent;");
+        scrollPane.setStyle("-fx-background-color: #F8FAFC; -fx-background: #F8FAFC;");
         
         // Create wrapper with bottom padding
         VBox wrapper = new VBox();
-        wrapper.setPadding(new Insets(0, 0, 50, 0)); // Add 50px bottom padding
+        wrapper.setPadding(new Insets(0, 0, 50, 0));
+        wrapper.setStyle("-fx-background-color: #F8FAFC;");
         
         switch (pageName) {
             case "Dashboard":
@@ -148,7 +175,11 @@ public class MainApp extends Application {
                 wrapper.getChildren().add(new SettingsPage());
                 break;
             case "AdminProfile":
-                wrapper.getChildren().add(new AdminProfilePage());
+                if (currentUserEmail != null) {
+                    wrapper.getChildren().add(new AdminProfilePage(currentUserEmail));
+                } else {
+                    wrapper.getChildren().add(new AdminProfilePage());
+                }
                 break;
             case "UserProfile":
                 wrapper.getChildren().add(new UserProfilePage());
@@ -162,6 +193,44 @@ public class MainApp extends Application {
     public void startWithUserType(Stage stage, String userType) throws Exception {
         this.userType = userType;
         start(stage);
+    }
+    
+    public void startWithUserInfo(Stage stage, String userType, String userEmail, String userName) throws Exception {
+        this.userType = userType;
+        this.currentUserEmail = userEmail;
+        this.currentUserName = userName;
+        start(stage);
+    }
+    
+    public void refreshTheme() {
+        // Update main container theme
+        VBox mainContainer = (VBox) root.getParent();
+        updateMainTheme(mainContainer);
+        
+        // Update sidebar theme
+        if (sidebar != null) {
+            sidebar.updateTheme();
+        }
+        
+        // Update topbar theme
+        if (topBar != null) {
+            topBar.updateTheme();
+        }
+        
+        // Update current page theme
+        ScrollPane currentScroll = (ScrollPane) root.getCenter();
+        if (currentScroll != null) {
+            updateScrollPaneTheme(currentScroll);
+        }
+    }
+    
+    private void updateMainTheme(VBox mainContainer) {
+        mainContainer.setStyle("-fx-background-color: " + ThemeManager.getBackground() + ";");
+        root.setStyle("-fx-background-color: " + ThemeManager.getBackground() + ";");
+    }
+    
+    private void updateScrollPaneTheme(ScrollPane scrollPane) {
+        scrollPane.setStyle("-fx-background-color: " + ThemeManager.getBackground() + "; -fx-background: " + ThemeManager.getBackground() + ";");
     }
     
     public static void main(String[] args) {

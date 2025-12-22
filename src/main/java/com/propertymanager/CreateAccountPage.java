@@ -10,6 +10,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class CreateAccountPage extends Application {
     
@@ -269,15 +272,91 @@ public class CreateAccountPage extends Application {
             return;
         }
         
-        // Show success message
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Account Created");
-        alert.setHeaderText(null);
-        alert.setContentText("Your account has been created successfully! You can now sign in.");
-        alert.showAndWait();
-        
-        // Go back to login
-        backToLogin();
+        // Save to database
+        if (saveUserToDatabase()) {
+            // Show success message
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Account Created");
+            alert.setHeaderText(null);
+            alert.setContentText("Your account has been created successfully! You can now sign in.");
+            alert.showAndWait();
+            
+            // Go back to login
+            backToLogin();
+        }
+    }
+    
+    private boolean saveUserToDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Get user input
+            String firstName = firstNameField.getText().trim();
+            String lastName = lastNameField.getText().trim();
+            String fullName = firstName + " " + lastName;
+            String email = emailField.getText().trim();
+            String phone = phoneField.getText().trim();
+            String password = passwordField.getText();
+            
+            RadioButton selectedRadio = (RadioButton) userTypeGroup.getSelectedToggle();
+            String userType = selectedRadio.getText().equals("Administrator") ? "admin" : "user";
+            
+            // Insert user into existing users table
+            String insertSQL = "INSERT INTO users (username, email, full_name, phone, password_hash, user_type) " +
+                             "VALUES (?, ?, ?, ?, ?, ?)";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(insertSQL)) {
+                stmt.setString(1, email); // Use email as username
+                stmt.setString(2, email);
+                stmt.setString(3, fullName);
+                stmt.setString(4, phone);
+                stmt.setString(5, hashPassword(password));
+                stmt.setString(6, userType);
+                
+                int rowsAffected = stmt.executeUpdate();
+                
+                if (rowsAffected > 0) {
+                    // Also create admin_profile entry if administrator
+                    if ("admin".equals(userType)) {
+                        createAdminProfile(conn, fullName, email, phone);
+                    }
+                    return true;
+                } else {
+                    showAlert("Error", "Failed to create account. Please try again.");
+                    return false;
+                }
+            }
+            
+        } catch (SQLException e) {
+            if (e.getMessage().contains("duplicate key") || e.getMessage().contains("UNIQUE constraint")) {
+                showAlert("Error", "An account with this email already exists.");
+            } else {
+                showAlert("Database Error", "Error creating account: " + e.getMessage());
+            }
+            return false;
+        }
+    }
+    
+    private void createAdminProfile(Connection conn, String name, String email, String phone) throws SQLException {
+        try {
+            String adminSQL = "INSERT INTO admin_profile (name, email, phone, department, password_hash) " +
+                             "VALUES (?, ?, ?, ?, ?) ON CONFLICT (email) DO NOTHING";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(adminSQL)) {
+                stmt.setString(1, name);
+                stmt.setString(2, email);
+                stmt.setString(3, phone);
+                stmt.setString(4, "IT Administration");
+                stmt.setString(5, hashPassword(passwordField.getText()));
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            // Ignore if admin_profile table doesn't exist
+            System.out.println("Admin profile creation skipped: " + e.getMessage());
+        }
+    }
+    
+    private String hashPassword(String password) {
+        // Simple hash for demo - in production use proper hashing like BCrypt
+        return "hashed_" + password.hashCode();
     }
     
     private boolean validateFields() {
@@ -288,8 +367,18 @@ public class CreateAccountPage extends Application {
             return false;
         }
         
+        if (!emailField.getText().contains("@")) {
+            showAlert("Error", "Please enter a valid email address.");
+            return false;
+        }
+        
         if (!passwordField.getText().equals(confirmPasswordField.getText())) {
             showAlert("Error", "Passwords do not match.");
+            return false;
+        }
+        
+        if (passwordField.getText().length() < 6) {
+            showAlert("Error", "Password must be at least 6 characters long.");
             return false;
         }
         

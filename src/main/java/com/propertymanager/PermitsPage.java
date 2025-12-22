@@ -9,8 +9,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,22 +32,43 @@ public class PermitsPage extends VBox {
     
     private void initPermits() {
         permits = new ArrayList<>();
-        permits.add(new Permit("PER-2025-001", "Sunset Hills Plot", "Residential Construction", 
-            "Property Holdings LLC", "2025-10-15", "approved", 25000000, 
-            "Construction of 6-story residential building with 24 apartments", 
-            "John Anderson", "2025-10-25"));
-        permits.add(new Permit("PER-2025-002", "Downtown Commercial Lot", "Commercial Development", 
-            "Metro Investments", "2025-10-20", "pending", 50000000, 
-            "Mixed-use development with retail and office spaces", null, null));
-        permits.add(new Permit("PER-2025-003", "Riverside Estate", "Residential Extension", 
-            "Green Valley Partners", "2025-10-18", "pending", 18000000, 
-            "Extension of existing building and landscaping", null, null));
-        permits.add(new Permit("PER-2025-004", "Industrial Park Site", "Warehouse Construction", 
-            "Industrial Holdings Inc", "2025-09-10", "rejected", 32000000, 
-            "Construction of large warehouse facility", "Sarah Mitchell", "2025-09-28"));
-        permits.add(new Permit("PER-2025-005", "Garden View Complex", "Renovation", 
-            "Urban Developers", "2025-10-28", "approved", 8500000, 
-            "Major renovation and modernization of existing structure", "Michael Chen", "2025-11-02"));
+        loadPermitsFromDatabase();
+    }
+    
+    private void loadPermitsFromDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String query = "SELECT p.permit_number, COALESCE(l.name, 'General Property') as land_name, " +
+                          "p.permit_type, p.requested_by, p.request_date, p.status, p.estimated_cost, " +
+                          "p.description, p.approved_by, p.approval_date " +
+                          "FROM permits p " +
+                          "LEFT JOIN lands l ON p.land_id = l.id " +
+                          "ORDER BY p.request_date DESC";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                
+                while (rs.next()) {
+                    String approvalDate = rs.getDate("approval_date") != null ? 
+                                        rs.getDate("approval_date").toString() : null;
+                    
+                    Permit permit = new Permit(
+                        rs.getString("permit_number"),
+                        rs.getString("land_name"),
+                        rs.getString("permit_type"),
+                        rs.getString("requested_by"),
+                        rs.getDate("request_date").toString(),
+                        rs.getString("status"),
+                        rs.getInt("estimated_cost"),
+                        rs.getString("description"),
+                        rs.getString("approved_by"),
+                        approvalDate
+                    );
+                    permits.add(permit);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     private void initPage() {
@@ -246,15 +272,18 @@ public class PermitsPage extends VBox {
         if ("pending".equals(permit.status)) {
             Button approveBtn = new Button("✅ Approve");
             approveBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15;");
+            approveBtn.setOnAction(e -> approvePermit(permit));
             
             Button rejectBtn = new Button("❌ Reject");
             rejectBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15;");
+            rejectBtn.setOnAction(e -> rejectPermit(permit));
             
             buttonsBox.getChildren().addAll(approveBtn, rejectBtn);
         }
         
         Button detailsBtn = new Button("👁 Details");
         detailsBtn.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-background-radius: 6; -fx-padding: 8 15;");
+        detailsBtn.setOnAction(e -> showPermitDetails(permit));
         buttonsBox.getChildren().add(detailsBtn);
         
         header.getChildren().addAll(titleBox, spacer, buttonsBox);
@@ -424,6 +453,191 @@ public class PermitsPage extends VBox {
         Scene scene = new Scene(content, 650, 500);
         dialog.setScene(scene);
         dialog.show();
+    }
+    
+    private void approvePermit(Permit permit) {
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Approve Permit");
+        confirmAlert.setHeaderText("Approve " + permit.id + "?");
+        confirmAlert.setContentText("Are you sure you want to approve this construction permit?\n\n" +
+                "Land: " + permit.landName + "\n" +
+                "Type: " + permit.type + "\n" +
+                "Requested by: " + permit.requestedBy);
+        
+        confirmAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                updatePermitStatus(permit, "approved", "Admin User");
+            }
+        });
+    }
+    
+    private void rejectPermit(Permit permit) {
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Reject Permit");
+        confirmAlert.setHeaderText("Reject " + permit.id + "?");
+        confirmAlert.setContentText("Are you sure you want to reject this construction permit?\n\n" +
+                "Land: " + permit.landName + "\n" +
+                "Type: " + permit.type + "\n" +
+                "Requested by: " + permit.requestedBy);
+        
+        confirmAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                updatePermitStatus(permit, "rejected", "Admin User");
+            }
+        });
+    }
+    
+    private void updatePermitStatus(Permit permit, String newStatus, String approvedBy) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String query = "UPDATE permits SET status = ?, approved_by = ?, approval_date = CURRENT_DATE WHERE permit_number = ?";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, newStatus);
+                stmt.setString(2, approvedBy);
+                stmt.setString(3, permit.id);
+                
+                int rowsUpdated = stmt.executeUpdate();
+                
+                if (rowsUpdated > 0) {
+                    // Update local permit object
+                    permit.status = newStatus;
+                    permit.approvedBy = approvedBy;
+                    permit.approvalDate = java.time.LocalDate.now().toString();
+                    
+                    // Refresh the permits list
+                    permits.clear();
+                    loadPermitsFromDatabase();
+                    updatePermitsList();
+                    
+                    // Show success message
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Success");
+                    successAlert.setHeaderText("Permit " + ("approved".equals(newStatus) ? "Approved" : "Rejected"));
+                    successAlert.setContentText("Permit " + permit.id + " has been " + newStatus + " successfully!");
+                    successAlert.showAndWait();
+                } else {
+                    showErrorAlert("Update Failed", "Failed to update permit status. Please try again.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showErrorAlert("Database Error", "Error updating permit: " + e.getMessage());
+        }
+    }
+    
+    private void showPermitDetails(Permit permit) {
+        Stage detailsDialog = new Stage();
+        detailsDialog.setTitle("Permit Details - " + permit.id);
+        detailsDialog.initModality(Modality.APPLICATION_MODAL);
+        
+        VBox content = new VBox(20);
+        content.setPadding(new Insets(25));
+        content.setStyle("-fx-background-color: #f8f9fa;");
+        
+        // Header
+        VBox headerBox = new VBox(10);
+        Label titleLabel = new Label(permit.id);
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        titleLabel.setTextFill(Color.web("#2c3e50"));
+        
+        HBox statusBox = new HBox(10);
+        Label statusBadge = createStatusBadge(permit.status);
+        Label typeLabel = new Label(permit.type);
+        typeLabel.setPadding(new Insets(4, 8, 4, 8));
+        typeLabel.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-background-radius: 12; -fx-font-size: 12px;");
+        statusBox.getChildren().addAll(statusBadge, typeLabel);
+        
+        headerBox.getChildren().addAll(titleLabel, statusBox);
+        
+        // Details Grid
+        GridPane detailsGrid = new GridPane();
+        detailsGrid.setHgap(30);
+        detailsGrid.setVgap(15);
+        detailsGrid.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20;");
+        
+        addDetailRow(detailsGrid, 0, 0, "🏢 Land/Property", permit.landName);
+        addDetailRow(detailsGrid, 1, 0, "🏗️ Type", permit.type);
+        addDetailRow(detailsGrid, 0, 1, "👤 Requested By", permit.requestedBy);
+        addDetailRow(detailsGrid, 1, 1, "📅 Request Date", permit.requestDate);
+        addDetailRow(detailsGrid, 0, 2, "💰 Estimated Cost", String.format("%,d MAD", permit.estimatedCost));
+        
+        if (permit.approvedBy != null) {
+            addDetailRow(detailsGrid, 1, 2, "✅ Approved By", permit.approvedBy);
+            addDetailRow(detailsGrid, 0, 3, "📅 Approval Date", permit.approvalDate);
+        }
+        
+        // Description
+        VBox descriptionBox = new VBox(10);
+        descriptionBox.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20;");
+        
+        Label descTitle = new Label("📝 Project Description");
+        descTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        descTitle.setTextFill(Color.web("#2c3e50"));
+        
+        Label descText = new Label(permit.description);
+        descText.setFont(Font.font("Arial", 14));
+        descText.setTextFill(Color.web("#495057"));
+        descText.setWrapText(true);
+        descText.setPrefWidth(500);
+        
+        descriptionBox.getChildren().addAll(descTitle, descText);
+        
+        // Action Buttons
+        HBox actionButtons = new HBox(15);
+        actionButtons.setAlignment(Pos.CENTER);
+        
+        if ("pending".equals(permit.status)) {
+            Button approveBtn = new Button("✅ Approve Permit");
+            approveBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 12 20; -fx-font-weight: bold;");
+            approveBtn.setOnAction(e -> {
+                approvePermit(permit);
+                detailsDialog.close();
+            });
+            
+            Button rejectBtn = new Button("❌ Reject Permit");
+            rejectBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 12 20; -fx-font-weight: bold;");
+            rejectBtn.setOnAction(e -> {
+                rejectPermit(permit);
+                detailsDialog.close();
+            });
+            
+            actionButtons.getChildren().addAll(approveBtn, rejectBtn);
+        }
+        
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 12 20;");
+        closeBtn.setOnAction(e -> detailsDialog.close());
+        actionButtons.getChildren().add(closeBtn);
+        
+        content.getChildren().addAll(headerBox, detailsGrid, descriptionBox, actionButtons);
+        
+        Scene scene = new Scene(content, 600, 500);
+        detailsDialog.setScene(scene);
+        detailsDialog.show();
+    }
+    
+    private void addDetailRow(GridPane grid, int col, int row, String label, String value) {
+        VBox fieldBox = new VBox(5);
+        
+        Label labelText = new Label(label);
+        labelText.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        labelText.setTextFill(Color.web("#6c757d"));
+        
+        Label valueText = new Label(value);
+        valueText.setFont(Font.font("Arial", 14));
+        valueText.setTextFill(Color.web("#2c3e50"));
+        valueText.setWrapText(true);
+        
+        fieldBox.getChildren().addAll(labelText, valueText);
+        grid.add(fieldBox, col, row);
+    }
+    
+    private void showErrorAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(title);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
     
     // Permit data class

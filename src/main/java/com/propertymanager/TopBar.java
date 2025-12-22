@@ -36,7 +36,7 @@ public class TopBar extends HBox {
     
     private void initTopBar() {
         setPrefHeight(50);
-        setStyle("-fx-background-color: white; -fx-border-color: #e9ecef; -fx-border-width: 0 0 1 0;");
+        updateTheme();
         setPadding(new Insets(10, 30, 10, 30));
         setAlignment(Pos.CENTER_LEFT);
         setSpacing(20);
@@ -45,7 +45,7 @@ public class TopBar extends HBox {
         TextField searchField = new TextField();
         searchField.setPromptText("Search buildings, buyers, permits...");
         searchField.setPrefWidth(400);
-        searchField.setStyle("-fx-background-color: #f8f9fa; -fx-border-color: #e9ecef; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;");
+        updateSearchFieldTheme(searchField);
         
         // Spacer
         Region spacer = new Region();
@@ -64,9 +64,25 @@ public class TopBar extends HBox {
         
 
         
+        // Backup button
+        Button backupBtn = new Button("💾");
+        backupBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 18px; -fx-border-color: transparent; -fx-cursor: hand;");
+        backupBtn.setOnAction(e -> {
+            Stage currentStage = (Stage) this.getScene().getWindow();
+            BackupManager.showBackupDialog(currentStage);
+        });
+        
         // Theme toggle
         Button themeBtn = new Button("🌙");
-        themeBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 18px; -fx-border-color: transparent;");
+        themeBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 18px; -fx-border-color: transparent; -fx-cursor: hand;");
+        themeBtn.setOnAction(e -> {
+            // ThemeManager.toggleTheme();
+            // themeBtn.setText(ThemeManager.isDarkMode() ? "☀️" : "🌙");
+            // updateTheme();
+            // if (mainApp != null) {
+            //     mainApp.refreshTheme();
+            // }
+        });
         
         // User profile
         HBox userProfile = new HBox(10);
@@ -77,11 +93,12 @@ public class TopBar extends HBox {
         
         Label userName = new Label(userType);
         userName.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        userName.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         
         String roleText = userType.equals("Admin User") ? "Administrator" : "User";
         Label userRole = new Label(roleText);
         userRole.setFont(Font.font("Arial", 12));
-        userRole.setTextFill(Color.GRAY);
+        userRole.setTextFill(Color.web(ThemeManager.getTextSecondary()));
         
         userProfile.getChildren().addAll(userBtn, userName);
         
@@ -89,7 +106,7 @@ public class TopBar extends HBox {
         userProfile.setOnMouseClicked(e -> showUserProfilePopup(userProfile));
         userProfile.setStyle("-fx-cursor: hand;");
         
-        getChildren().addAll(searchField, spacer, notificationBox, themeBtn, userProfile);
+        getChildren().addAll(searchField, spacer, notificationBox, backupBtn, themeBtn, userProfile);
     }
     
 
@@ -272,7 +289,14 @@ public class TopBar extends HBox {
         
         Button markAllBtn = new Button("✓ Mark all as read");
         markAllBtn.setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #374151; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 20;");
-        markAllBtn.setOnAction(e -> System.out.println("Mark all as read clicked"));
+        markAllBtn.setOnAction(e -> {
+            markAllNotificationsAsRead();
+            // Update badge to show no new notifications
+            badge.setText("0 new");
+            badge.setStyle("-fx-background-color: #6b7280; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 8 16; -fx-font-size: 16px; -fx-font-weight: bold;");
+            // Close popup and refresh
+            ((Stage) markAllBtn.getScene().getWindow()).close();
+        });
         
         header.getChildren().addAll(title, badge, spacer, markAllBtn);
         
@@ -449,5 +473,36 @@ public class TopBar extends HBox {
             this.isRead = isRead;
             this.type = type;
         }
+    }
+    
+    public void updateTheme() {
+        setStyle("-fx-background-color: " + ThemeManager.getTopbar() + "; -fx-border-color: " + ThemeManager.getBorder() + "; -fx-border-width: 0 0 1 0;");
+    }
+    
+    private void updateSearchFieldTheme(TextField searchField) {
+        searchField.setStyle("-fx-background-color: " + ThemeManager.getSurface() + "; -fx-border-color: " + ThemeManager.getBorder() + "; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10; -fx-text-fill: " + ThemeManager.getTextPrimary() + "; -fx-prompt-text-fill: " + ThemeManager.getTextMuted() + ";");
+    }
+    
+    private void markAllNotificationsAsRead() {
+        // This method would typically update a database or notification service
+        // For now, we'll just print a confirmation
+        System.out.println("All notifications marked as read");
+        
+        // In a real application, you would:
+        // 1. Update notification status in database
+        // 2. Update notification count
+        // 3. Refresh the UI
+        
+        // Example database update (commented out):
+        /*
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String sql = "UPDATE notifications SET is_read = true WHERE user_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, getCurrentUserId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        */
     }
 }

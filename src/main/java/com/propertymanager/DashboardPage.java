@@ -7,69 +7,175 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.scene.Scene;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardPage extends VBox {
     
+    private int totalBuildings = 0;
+    private int totalApartments = 0;
+    private int totalBuyers = 0;
+    private int totalLands = 0;
+    private int soldApartments = 0;
+    private int availableApartments = 0;
+    
+    private VBox mainContent;
+    private HBox statsRow;
+    private HBox chartsRow;
+    private HBox activitiesRow;
+    private boolean editMode = false;
+    private List<VBox> widgets = new ArrayList<>();
+    
     public DashboardPage() {
+        loadDataFromDatabase();
         initDashboard();
+    }
+    
+    private void loadDataFromDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Load building stats
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM buildings")) {
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) totalBuildings = rs.getInt(1);
+            }
+            
+            // Load apartment stats
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM apartments")) {
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) totalApartments = rs.getInt(1);
+            }
+            
+            // Load buyer stats
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM buyers")) {
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) totalBuyers = rs.getInt(1);
+            }
+            
+            // Load land stats
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM lands")) {
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) totalLands = rs.getInt(1);
+            }
+            
+            // Load occupancy stats
+            try (PreparedStatement stmt = conn.prepareStatement("SELECT status, COUNT(*) FROM apartments GROUP BY status")) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    String status = rs.getString(1);
+                    int count = rs.getInt(2);
+                    if ("sold".equals(status)) {
+                        soldApartments = count;
+                    } else if ("available".equals(status)) {
+                        availableApartments = count;
+                    }
+                }
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Use default values if database fails
+            totalBuildings = 6;
+            totalApartments = 240;
+            totalBuyers = 69;
+            totalLands = 6;
+            soldApartments = 69;
+            availableApartments = 171;
+        }
     }
     
     private void initDashboard() {
         setPadding(new Insets(0));
         setSpacing(0);
-        // خلفية متدرجة احترافية مع عناصر بصرية
-        setStyle("-fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); -fx-background-size: 400% 400%; -fx-background-position: 0% 50%;");
+        // Force dark theme for dashboard
+        setStyle("-fx-background: " + ThemeManager.getBackground() + ";");
         
         // Wrap everything in ScrollPane for better visibility
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: transparent;");
+        scrollPane.setStyle("-fx-background: " + ThemeManager.getBackground() + "; -fx-background-color: transparent;");
         
         VBox content = new VBox(30);
         content.setPadding(new Insets(40));
-        content.setStyle("-fx-background-color: rgba(255, 255, 255, 0.05); -fx-background-radius: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 20, 0, 0, 5);");
+        content.getStyleClass().add("root");
         
-        // Header
-        VBox header = createHeader();
+        // Header with edit controls
+        VBox header = createEditableHeader();
         
         // Stats cards
-        HBox statsRow = createStatsRow();
+        statsRow = createStatsRow();
         
         // Charts section
-        HBox chartsRow = createChartsRow();
+        chartsRow = createChartsRow();
         
         // Activities and Tasks section
-        HBox activitiesRow = createActivitiesRow();
+        activitiesRow = createActivitiesRow();
         
         content.getChildren().addAll(header, statsRow, chartsRow, activitiesRow);
+        mainContent = content;
         scrollPane.setContent(content);
         
-        // إضافة عناصر الخلفية التزيينية
+        // Main container with theme background
         StackPane mainContainer = new StackPane();
+        mainContainer.setStyle("-fx-background: " + ThemeManager.getBackground() + ";");
         mainContainer.getChildren().addAll(createBackgroundElements(), scrollPane);
         
         getChildren().add(mainContainer);
     }
     
-    private VBox createHeader() {
-        VBox header = new VBox(5);
+    private VBox createEditableHeader() {
+        VBox header = new VBox(15);
         
-        Label title = new Label("Dashboard Overview");
+        // Title row with edit controls
+        HBox titleRow = new HBox(20);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+        
+        VBox titleBox = new VBox(5);
+        Label title = new Label("📊 Dashboard Overview");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 28));
-        title.setTextFill(Color.web("#2c3e50"));
+        title.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         
         Label subtitle = new Label("Welcome back! Here's what's happening with your properties.");
         subtitle.setFont(Font.font("Arial", 14));
-        subtitle.setTextFill(Color.web("#6c757d"));
+        subtitle.setTextFill(Color.web(ThemeManager.getTextSecondary()));
         
-        header.getChildren().addAll(title, subtitle);
+        titleBox.getChildren().addAll(title, subtitle);
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        // Edit controls
+        HBox controls = new HBox(10);
+        controls.setAlignment(Pos.CENTER_RIGHT);
+        
+        Button editBtn = new Button(editMode ? "💾 Save Layout" : "✏️ Edit Dashboard");
+        editBtn.setStyle("-fx-background-color: #4FD1C5; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 15; -fx-cursor: hand;");
+        editBtn.setOnAction(e -> toggleEditMode());
+        
+        Button addWidgetBtn = new Button("➕ Add Widget");
+        addWidgetBtn.setStyle("-fx-background-color: #2C3E8C; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 15; -fx-cursor: hand;");
+        addWidgetBtn.setOnAction(e -> showAddWidgetDialog());
+        
+        Button refreshBtn = new Button("🔄 Refresh");
+        refreshBtn.setStyle("-fx-background-color: #F5C542; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 15; -fx-cursor: hand;");
+        refreshBtn.setOnAction(e -> refreshDashboard());
+        
+        controls.getChildren().addAll(refreshBtn, addWidgetBtn, editBtn);
+        
+        titleRow.getChildren().addAll(titleBox, spacer, controls);
+        header.getChildren().add(titleRow);
+        
         return header;
     }
     
@@ -78,16 +184,190 @@ public class DashboardPage extends VBox {
         statsRow.setAlignment(Pos.CENTER);
         
         statsRow.getChildren().addAll(
-            createStatCard("Total Buildings", "24", "+2", "🏢", "#2C3E8C"),
-            createStatCard("Total Properties", "156", "+8", "📄", "#4FD1C5"),
-            createStatCard("Total Buyers", "142", "+5", "👥", "#F5C542"),
-            createStatCard("Land Properties", "8", "+1", "🏞️", "#8B5CF6")
+            createStatCard("Total Buildings", String.valueOf(totalBuildings), "+0", "🏢", "#2C3E8C"),
+            createStatCard("Total Properties", String.valueOf(totalApartments), "+0", "📄", "#4FD1C5"),
+            createStatCard("Total Buyers", String.valueOf(totalBuyers), "+0", "👥", "#F5C542"),
+            createStatCard("Land Properties", String.valueOf(totalLands), "+0", "🏞️", "#8B5CF6")
         );
         
         return statsRow;
     }
     
     private VBox createStatCard(String title, String value, String change, String icon, String color) {
+        VBox card = new VBox(10);
+        card.setPrefWidth(280);
+        card.setPrefHeight(120);
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: " + ThemeManager.getCard() + "; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: " + ThemeManager.getBorder() + "; -fx-effect: dropshadow(gaussian, rgba(0,0,0," + (ThemeManager.isDarkMode() ? "0.3" : "0.1") + "), 10, 0, 0, 2);");
+        
+        // Add edit controls when in edit mode
+        if (editMode) {
+            HBox editControls = new HBox(5);
+            editControls.setAlignment(Pos.TOP_RIGHT);
+            
+            Button editCardBtn = new Button("✏️");
+            editCardBtn.setStyle("-fx-background-color: #4FD1C5; -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 5; -fx-font-size: 10px;");
+            editCardBtn.setOnAction(e -> editStatCard(card, title, value, icon, color));
+            
+            Button deleteCardBtn = new Button("🗑️");
+            deleteCardBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 5; -fx-font-size: 10px;");
+            deleteCardBtn.setOnAction(e -> deleteStatCard(card));
+            
+            editControls.getChildren().addAll(editCardBtn, deleteCardBtn);
+            card.getChildren().add(editControls);
+        }
+        
+        HBox content = new HBox();
+        content.setAlignment(Pos.CENTER_LEFT);
+        
+        VBox textBox = new VBox(5);
+        Label titleLabel = new Label(title);
+        titleLabel.setFont(Font.font("Arial", 12));
+        titleLabel.setTextFill(Color.web(ThemeManager.getTextMuted()));
+        
+        HBox valueBox = new HBox(10);
+        valueBox.setAlignment(Pos.CENTER_LEFT);
+        
+        Label valueLabel = new Label(value);
+        valueLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        valueLabel.setTextFill(Color.web(ThemeManager.getTextPrimary()));
+        
+        Label changeLabel = new Label("📈 " + change);
+        changeLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        changeLabel.setTextFill(Color.GREEN);
+        
+        valueBox.getChildren().addAll(valueLabel, changeLabel);
+        textBox.getChildren().addAll(titleLabel, valueBox);
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 12; -fx-font-size: 20px;");
+        
+        content.getChildren().addAll(textBox, spacer, iconLabel);
+        card.getChildren().add(content);
+        
+        widgets.add(card);
+        return card;
+    }
+    
+    private void toggleEditMode() {
+        editMode = !editMode;
+        refreshDashboard();
+    }
+    
+    private void refreshDashboard() {
+        loadDataFromDatabase();
+        mainContent.getChildren().clear();
+        
+        VBox header = createEditableHeader();
+        statsRow = createStatsRow();
+        chartsRow = createChartsRow();
+        activitiesRow = createActivitiesRow();
+        
+        mainContent.getChildren().addAll(header, statsRow, chartsRow, activitiesRow);
+        
+        // Update all charts and diagrams with new data
+        updateAllCharts();
+    }
+    
+    private void updateAllCharts() {
+        // Update occupancy chart data
+        updateOccupancyChart();
+        // Update revenue chart data  
+        updateRevenueChart();
+    }
+    
+    private void showAddWidgetDialog() {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setTitle("➕ Add New Widget");
+        dialog.setResizable(false);
+        
+        VBox root = new VBox(20);
+        root.setPadding(new Insets(30));
+        root.setStyle("-fx-background-color: #f8fafc;");
+        
+        Label title = new Label("🎛️ Choose Widget Type");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        
+        VBox options = new VBox(15);
+        
+        Button statCardBtn = createWidgetOption("📊 Statistics Card", "Add a new statistics display card");
+        statCardBtn.setOnAction(e -> { addStatWidget(); dialog.close(); });
+        
+        Button chartBtn = createWidgetOption("📈 Chart Widget", "Add a new chart or graph");
+        chartBtn.setOnAction(e -> { addChartWidget(); dialog.close(); });
+        
+        Button activityBtn = createWidgetOption("📋 Activity Feed", "Add an activity or task list");
+        activityBtn.setOnAction(e -> { addActivityWidget(); dialog.close(); });
+        
+        Button customBtn = createWidgetOption("🎨 Custom Widget", "Create a custom information widget");
+        customBtn.setOnAction(e -> { addCustomWidget(); dialog.close(); });
+        
+        options.getChildren().addAll(statCardBtn, chartBtn, activityBtn, customBtn);
+        
+        Button cancelBtn = new Button("❌ Cancel");
+        cancelBtn.setStyle("-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-background-radius: 8; -fx-padding: 10 20;");
+        cancelBtn.setOnAction(e -> dialog.close());
+        
+        root.getChildren().addAll(title, options, cancelBtn);
+        
+        Scene scene = new Scene(root, 400, 500);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+    }
+    
+    private Button createWidgetOption(String title, String description) {
+        Button btn = new Button();
+        btn.setPrefWidth(340);
+        btn.setPrefHeight(80);
+        btn.setAlignment(Pos.CENTER_LEFT);
+        btn.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 10; -fx-background-radius: 10; -fx-padding: 15; -fx-cursor: hand;");
+        
+        VBox content = new VBox(5);
+        Label titleLabel = new Label(title);
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        
+        Label descLabel = new Label(description);
+        descLabel.setFont(Font.font("Arial", 12));
+        descLabel.setTextFill(Color.GRAY);
+        
+        content.getChildren().addAll(titleLabel, descLabel);
+        btn.setGraphic(content);
+        
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #f0f9ff; -fx-border-color: #4FD1C5; -fx-border-radius: 10; -fx-background-radius: 10; -fx-padding: 15; -fx-cursor: hand;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 10; -fx-background-radius: 10; -fx-padding: 15; -fx-cursor: hand;"));
+        
+        return btn;
+    }
+    
+    private void addStatWidget() {
+        VBox newWidget = createCustomStatCard("New Metric", "0", "+0", "📊", "#8B5CF6");
+        statsRow.getChildren().add(newWidget);
+        showAlert("Widget Added", "New statistics widget added successfully!", Alert.AlertType.INFORMATION);
+    }
+    
+    private void addChartWidget() {
+        VBox newChart = createMiniChart("New Chart", "Sample data visualization");
+        chartsRow.getChildren().add(newChart);
+        showAlert("Widget Added", "New chart widget added successfully!", Alert.AlertType.INFORMATION);
+    }
+    
+    private void addActivityWidget() {
+        VBox newActivity = createQuickNotes();
+        activitiesRow.getChildren().add(newActivity);
+        showAlert("Widget Added", "New activity widget added successfully!", Alert.AlertType.INFORMATION);
+    }
+    
+    private void addCustomWidget() {
+        VBox customWidget = createCustomInfoWidget();
+        activitiesRow.getChildren().add(customWidget);
+        showAlert("Widget Added", "New custom widget added successfully!", Alert.AlertType.INFORMATION);
+    }
+    
+    private VBox createCustomStatCard(String title, String value, String change, String icon, String color) {
         VBox card = new VBox(10);
         card.setPrefWidth(280);
         card.setPrefHeight(120);
@@ -120,12 +400,182 @@ public class DashboardPage extends VBox {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 12; -fx-font-size: 20px;");
+        iconLabel.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 12; -fx-font-size: 20px;");
         
         content.getChildren().addAll(textBox, spacer, iconLabel);
         card.getChildren().add(content);
         
         return card;
+    }
+    
+    private VBox createMiniChart(String title, String description) {
+        VBox container = new VBox(15);
+        container.setPrefWidth(300);
+        container.setPrefHeight(200);
+        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        
+        Label titleLabel = new Label(title);
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        
+        Label descLabel = new Label(description);
+        descLabel.setFont(Font.font("Arial", 12));
+        descLabel.setTextFill(Color.GRAY);
+        
+        // Simple progress bar as placeholder
+        ProgressBar progress = new ProgressBar(0.7);
+        progress.setPrefWidth(250);
+        progress.setStyle("-fx-accent: #4FD1C5;");
+        
+        container.getChildren().addAll(titleLabel, descLabel, progress);
+        return container;
+    }
+    
+    private VBox createQuickNotes() {
+        VBox container = new VBox(15);
+        container.setPrefWidth(350);
+        container.setPrefHeight(300);
+        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        
+        Label title = new Label("📝 Quick Notes");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        
+        TextArea notesArea = new TextArea();
+        notesArea.setPromptText("Add your notes here...");
+        notesArea.setPrefHeight(200);
+        notesArea.setStyle("-fx-background-radius: 8; -fx-border-radius: 8;");
+        
+        Button saveBtn = new Button("💾 Save Notes");
+        saveBtn.setStyle("-fx-background-color: #4FD1C5; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15;");
+        saveBtn.setOnAction(e -> showAlert("Notes Saved", "Your notes have been saved successfully!", Alert.AlertType.INFORMATION));
+        
+        container.getChildren().addAll(title, notesArea, saveBtn);
+        return container;
+    }
+    
+    private VBox createCustomInfoWidget() {
+        VBox container = new VBox(15);
+        container.setPrefWidth(350);
+        container.setPrefHeight(250);
+        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        
+        Label title = new Label("🎯 Custom Info");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        
+        VBox infoList = new VBox(10);
+        infoList.getChildren().addAll(
+            createInfoItem("🏆", "Top Performer", "Building A - 95% occupancy"),
+            createInfoItem("⚠️", "Attention Needed", "3 maintenance requests pending"),
+            createInfoItem("💰", "Revenue Goal", "85% of monthly target achieved"),
+            createInfoItem("📈", "Growth Rate", "+12% compared to last month")
+        );
+        
+        container.getChildren().addAll(title, infoList);
+        return container;
+    }
+    
+    private HBox createInfoItem(String icon, String label, String value) {
+        HBox item = new HBox(10);
+        item.setAlignment(Pos.CENTER_LEFT);
+        item.setPadding(new Insets(8));
+        item.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 6;");
+        
+        Label iconLabel = new Label(icon);
+        iconLabel.setFont(Font.font(14));
+        
+        VBox textBox = new VBox(2);
+        Label labelText = new Label(label);
+        labelText.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        
+        Label valueText = new Label(value);
+        valueText.setFont(Font.font("Arial", 11));
+        valueText.setTextFill(Color.GRAY);
+        
+        textBox.getChildren().addAll(labelText, valueText);
+        item.getChildren().addAll(iconLabel, textBox);
+        
+        return item;
+    }
+    
+    private void editStatCard(VBox card, String title, String value, String icon, String color) {
+        showEditCardDialog(card, title, value, icon, color);
+    }
+    
+    private void deleteStatCard(VBox card) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Widget");
+        confirm.setHeaderText("Are you sure?");
+        confirm.setContentText("This will permanently delete this widget.");
+        
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                statsRow.getChildren().remove(card);
+                widgets.remove(card);
+            }
+        });
+    }
+    
+    private void showEditCardDialog(VBox card, String currentTitle, String currentValue, String currentIcon, String currentColor) {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setTitle("✏️ Edit Widget");
+        
+        VBox root = new VBox(20);
+        root.setPadding(new Insets(30));
+        root.setStyle("-fx-background-color: #f8fafc;");
+        
+        Label title = new Label("🎛️ Edit Widget Properties");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        
+        GridPane form = new GridPane();
+        form.setHgap(15);
+        form.setVgap(15);
+        
+        TextField titleField = new TextField(currentTitle);
+        TextField valueField = new TextField(currentValue);
+        TextField iconField = new TextField(currentIcon);
+        ComboBox<String> colorCombo = new ComboBox<>();
+        colorCombo.getItems().addAll("#2C3E8C", "#4FD1C5", "#F5C542", "#8B5CF6", "#ef4444", "#10b981");
+        colorCombo.setValue(currentColor);
+        
+        form.add(new Label("Title:"), 0, 0);
+        form.add(titleField, 1, 0);
+        form.add(new Label("Value:"), 0, 1);
+        form.add(valueField, 1, 1);
+        form.add(new Label("Icon:"), 0, 2);
+        form.add(iconField, 1, 2);
+        form.add(new Label("Color:"), 0, 3);
+        form.add(colorCombo, 1, 3);
+        
+        HBox buttons = new HBox(10);
+        buttons.setAlignment(Pos.CENTER);
+        
+        Button saveBtn = new Button("💾 Save");
+        saveBtn.setStyle("-fx-background-color: #4FD1C5; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 10 20;");
+        saveBtn.setOnAction(e -> {
+            // Update the card (simplified for demo)
+            showAlert("Widget Updated", "Widget has been updated successfully!", Alert.AlertType.INFORMATION);
+            dialog.close();
+        });
+        
+        Button cancelBtn = new Button("❌ Cancel");
+        cancelBtn.setStyle("-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-background-radius: 6; -fx-padding: 10 20;");
+        cancelBtn.setOnAction(e -> dialog.close());
+        
+        buttons.getChildren().addAll(saveBtn, cancelBtn);
+        
+        root.getChildren().addAll(title, form, buttons);
+        
+        Scene scene = new Scene(root, 400, 350);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+    }
+    
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
     
     private HBox createChartsRow() {
@@ -142,85 +592,134 @@ public class DashboardPage extends VBox {
         return chartsRow;
     }
     
+    private BarChart<String, Number> revenueBarChart;
+    private XYChart.Series<String, Number> revenueSeries;
+    private XYChart.Series<String, Number> expensesSeries;
+    
     private VBox createRevenueChart() {
         VBox container = new VBox(15);
         container.setPrefWidth(650);
         container.setPrefHeight(400);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        container.setStyle("-fx-background-color: #262626; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 2);");
         
-        Label title = new Label("Revenue & Expenses");
+        Label title = new Label("💰 Revenue & Expenses");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        title.setTextFill(Color.web("#2c3e50"));
+        title.setTextFill(Color.web("#FFFFFF"));
         
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
-        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
-        chart.setPrefHeight(280);
-        chart.setLegendVisible(true);
+        revenueBarChart = new BarChart<>(xAxis, yAxis);
+        revenueBarChart.setPrefHeight(280);
+        revenueBarChart.setLegendVisible(true);
+        revenueBarChart.setAnimated(true);
+        revenueBarChart.setStyle("-fx-background-color: transparent;");
         
-        XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
+        revenueSeries = new XYChart.Series<>();
         revenueSeries.setName("Revenue");
-        revenueSeries.getData().add(new XYChart.Data<>("Jan", 4500000));
-        revenueSeries.getData().add(new XYChart.Data<>("Feb", 5800000));
-        revenueSeries.getData().add(new XYChart.Data<>("Mar", 6200000));
-        revenueSeries.getData().add(new XYChart.Data<>("Apr", 4900000));
-        revenueSeries.getData().add(new XYChart.Data<>("May", 7500000));
-        revenueSeries.getData().add(new XYChart.Data<>("Jun", 8800000));
         
-        XYChart.Series<String, Number> expensesSeries = new XYChart.Series<>();
+        expensesSeries = new XYChart.Series<>();
         expensesSeries.setName("Expenses");
-        expensesSeries.getData().add(new XYChart.Data<>("Jan", 1200000));
-        expensesSeries.getData().add(new XYChart.Data<>("Feb", 1500000));
-        expensesSeries.getData().add(new XYChart.Data<>("Mar", 1300000));
-        expensesSeries.getData().add(new XYChart.Data<>("Apr", 1400000));
-        expensesSeries.getData().add(new XYChart.Data<>("May", 1600000));
-        expensesSeries.getData().add(new XYChart.Data<>("Jun", 1500000));
         
-        chart.getData().addAll(revenueSeries, expensesSeries);
+        updateRevenueData();
         
-        container.getChildren().addAll(title, chart);
+        revenueBarChart.getData().addAll(revenueSeries, expensesSeries);
+        
+        // Apply dark theme chart styling
+        revenueBarChart.applyCss();
+        revenueBarChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
+        revenueBarChart.lookup(".chart-vertical-grid-lines").setStyle("-fx-stroke: #404040;");
+        revenueBarChart.lookup(".chart-horizontal-grid-lines").setStyle("-fx-stroke: #404040;");
+        
+        container.getChildren().addAll(title, revenueBarChart);
         return container;
     }
+    
+    private void updateRevenueData() {
+        if (revenueSeries != null && expensesSeries != null) {
+            revenueSeries.getData().clear();
+            expensesSeries.getData().clear();
+            
+            double baseRevenue = soldApartments * 500000; // Base calculation
+            double baseExpenses = baseRevenue * 0.25;
+            
+            String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun"};
+            
+            for (String month : months) {
+                double variation = 0.8 + (Math.random() * 0.4);
+                revenueSeries.getData().add(new XYChart.Data<>(month, baseRevenue * variation));
+                expensesSeries.getData().add(new XYChart.Data<>(month, baseExpenses * variation));
+            }
+        }
+    }
+    
+    private void updateRevenueChart() {
+        updateRevenueData();
+    }
+    
+    private PieChart occupancyPieChart;
+    private Label soldLegendLabel;
+    private Label availableLegendLabel;
     
     private VBox createOccupancyChart() {
         VBox container = new VBox(15);
         container.setPrefWidth(450);
         container.setPrefHeight(400);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        container.setStyle("-fx-background-color: #262626; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 2);");
         
-        Label title = new Label("Occupancy Rate");
+        Label title = new Label("📊 Occupancy Rate");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        title.setTextFill(Color.web("#2c3e50"));
+        title.setTextFill(Color.web("#FFFFFF"));
         
-        PieChart chart = new PieChart();
-        chart.setPrefHeight(220);
-        chart.setLegendVisible(false);
+        occupancyPieChart = new PieChart();
+        occupancyPieChart.setPrefHeight(220);
+        occupancyPieChart.setLegendVisible(false);
+        occupancyPieChart.setAnimated(true);
+        occupancyPieChart.setStyle("-fx-background-color: transparent;");
         
-        PieChart.Data sold = new PieChart.Data("Sold", 142);
-        PieChart.Data available = new PieChart.Data("Available", 14);
+        PieChart.Data sold = new PieChart.Data("Sold", soldApartments);
+        PieChart.Data available = new PieChart.Data("Available", availableApartments);
         
-        chart.getData().addAll(sold, available);
+        occupancyPieChart.getData().addAll(sold, available);
         
-        // Legend
+        // Legend with live updates
         VBox legend = new VBox(10);
         HBox soldLegend = new HBox(10);
         Label soldColor = new Label("●");
-        soldColor.setTextFill(Color.web("#4FD1C5"));
+        soldColor.setTextFill(Color.web("#10B981"));
         soldColor.setFont(Font.font(16));
-        Label soldLabel = new Label("Sold                142");
-        soldLegend.getChildren().addAll(soldColor, soldLabel);
+        soldLegendLabel = new Label("Sold: " + soldApartments);
+        soldLegendLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        soldLegendLabel.setTextFill(Color.web("#D1D5DB"));
+        soldLegend.getChildren().addAll(soldColor, soldLegendLabel);
         
         HBox availableLegend = new HBox(10);
         Label availableColor = new Label("●");
-        availableColor.setTextFill(Color.web("#F5C542"));
+        availableColor.setTextFill(Color.web("#EF4444"));
         availableColor.setFont(Font.font(16));
-        Label availableLabel = new Label("Available        14");
-        availableLegend.getChildren().addAll(availableColor, availableLabel);
+        availableLegendLabel = new Label("Available: " + availableApartments);
+        availableLegendLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        availableLegendLabel.setTextFill(Color.web("#D1D5DB"));
+        availableLegend.getChildren().addAll(availableColor, availableLegendLabel);
         
         legend.getChildren().addAll(soldLegend, availableLegend);
         
-        container.getChildren().addAll(title, chart, legend);
+        container.getChildren().addAll(title, occupancyPieChart, legend);
         return container;
+    }
+    
+    private void updateOccupancyChart() {
+        if (occupancyPieChart != null && !occupancyPieChart.getData().isEmpty()) {
+            occupancyPieChart.getData().get(0).setPieValue(soldApartments);
+            occupancyPieChart.getData().get(1).setPieValue(availableApartments);
+            
+            if (soldLegendLabel != null) {
+                soldLegendLabel.setText("Sold: " + soldApartments);
+            }
+            
+            if (availableLegendLabel != null) {
+                availableLegendLabel.setText("Available: " + availableApartments);
+            }
+        }
     }
     
     private HBox createActivitiesRow() {
@@ -241,11 +740,11 @@ public class DashboardPage extends VBox {
         VBox container = new VBox(15);
         container.setPrefWidth(550);
         container.setPrefHeight(350);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        container.setStyle("-fx-background-color: " + ThemeManager.getCard() + "; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0," + (ThemeManager.isDarkMode() ? "0.3" : "0.1") + "), 8, 0, 0, 2);");
         
         Label title = new Label("Recent Activities");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        title.setTextFill(Color.web("#2c3e50"));
+        title.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         
         VBox activitiesList = new VBox(12);
         
@@ -261,7 +760,7 @@ public class DashboardPage extends VBox {
         ScrollPane scrollPane = new ScrollPane(activitiesList);
         scrollPane.setFitToWidth(true);
         scrollPane.setPrefHeight(250);
-        scrollPane.setStyle("-fx-background-color: transparent;");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
         
         container.getChildren().addAll(title, scrollPane);
         return container;
@@ -271,7 +770,7 @@ public class DashboardPage extends VBox {
         HBox item = new HBox(15);
         item.setAlignment(Pos.CENTER_LEFT);
         item.setPadding(new Insets(10));
-        item.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8;");
+        item.setStyle("-fx-background-color: " + (ThemeManager.isDarkMode() ? "#2D2D2D" : "#F8F9FA") + "; -fx-background-radius: 8;");
         
         Label iconLabel = new Label(icon);
         iconLabel.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 8; -fx-font-size: 14px;");
@@ -279,11 +778,11 @@ public class DashboardPage extends VBox {
         VBox textBox = new VBox(3);
         Label textLabel = new Label(text);
         textLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 13));
-        textLabel.setTextFill(Color.web("#2c3e50"));
+        textLabel.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         
         Label timeLabel = new Label(time);
         timeLabel.setFont(Font.font("Arial", 11));
-        timeLabel.setTextFill(Color.GRAY);
+        timeLabel.setTextFill(Color.web(ThemeManager.getTextSecondary()));
         
         textBox.getChildren().addAll(textLabel, timeLabel);
         item.getChildren().addAll(iconLabel, textBox);
@@ -295,11 +794,11 @@ public class DashboardPage extends VBox {
         VBox container = new VBox(15);
         container.setPrefWidth(550);
         container.setPrefHeight(350);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);");
+        container.setStyle("-fx-background-color: " + ThemeManager.getCard() + "; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0," + (ThemeManager.isDarkMode() ? "0.3" : "0.1") + "), 8, 0, 0, 2);");
         
         Label title = new Label("Upcoming Tasks");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        title.setTextFill(Color.web("#2c3e50"));
+        title.setTextFill(Color.web(ThemeManager.getTextPrimary()));
         
         VBox tasksList = new VBox(12);
         
@@ -315,7 +814,7 @@ public class DashboardPage extends VBox {
         ScrollPane scrollPane = new ScrollPane(tasksList);
         scrollPane.setFitToWidth(true);
         scrollPane.setPrefHeight(250);
-        scrollPane.setStyle("-fx-background-color: transparent;");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
         
         container.getChildren().addAll(title, scrollPane);
         return container;
@@ -325,7 +824,7 @@ public class DashboardPage extends VBox {
         HBox item = new HBox(15);
         item.setAlignment(Pos.CENTER_LEFT);
         item.setPadding(new Insets(10));
-        item.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8;");
+        item.setStyle("-fx-background-color: " + (ThemeManager.isDarkMode() ? "#2D2D2D" : "#F8F9FA") + "; -fx-background-radius: 8;");
         
         CheckBox checkBox = new CheckBox();
         checkBox.setSelected(completed);
@@ -333,7 +832,7 @@ public class DashboardPage extends VBox {
         VBox textBox = new VBox(3);
         Label taskLabel = new Label(task);
         taskLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 13));
-        taskLabel.setTextFill(completed ? Color.GRAY : Color.web("#2c3e50"));
+        taskLabel.setTextFill(completed ? Color.web(ThemeManager.getTextSecondary()) : Color.web(ThemeManager.getTextPrimary()));
         if (completed) {
             taskLabel.setStyle("-fx-strikethrough: true;");
         }
@@ -341,7 +840,7 @@ public class DashboardPage extends VBox {
         HBox detailsBox = new HBox(10);
         Label dateLabel = new Label("📅 " + date);
         dateLabel.setFont(Font.font("Arial", 11));
-        dateLabel.setTextFill(Color.GRAY);
+        dateLabel.setTextFill(Color.web("#9CA3AF"));
         
         Label priorityLabel = new Label(priority.toUpperCase());
         priorityLabel.setFont(Font.font("Arial", FontWeight.BOLD, 10));

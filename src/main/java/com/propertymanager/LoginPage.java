@@ -10,6 +10,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LoginPage extends Application {
     
@@ -223,18 +227,95 @@ public class LoginPage extends Application {
         String username = usernameField.getText();
         String password = passwordField.getText();
         
-        // Simple validation (you can enhance this)
+        // Simple validation
         if (username.isEmpty() || password.isEmpty()) {
             showAlert("Error", "Please enter both username and password.");
             return;
         }
         
-        // For demo purposes, accept any non-empty credentials
-        // In real app, validate against database
-        openMainApplication();
+        // Authenticate against database
+        authenticateUser(username, password);
     }
     
-    private void openMainApplication() {
+    private void authenticateUser(String username, String password) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Check users table with password verification
+            String userSQL = "SELECT email, user_type, phone, full_name FROM users WHERE email = ? AND password_hash = ?";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(userSQL)) {
+                stmt.setString(1, username);
+                stmt.setString(2, hashPassword(password));
+                ResultSet rs = stmt.executeQuery();
+                
+                if (rs.next()) {
+                    String userEmail = rs.getString("email");
+                    String userName = rs.getString("full_name");
+                    String userType = rs.getString("user_type");
+                    String userPhone = rs.getString("phone");
+                    
+                    // Set user type based on role from database
+                    RadioButton adminRadio = null;
+                    RadioButton userRadio = null;
+                    
+                    for (Toggle toggle : userTypeGroup.getToggles()) {
+                        RadioButton rb = (RadioButton) toggle;
+                        if (rb.getText().equals("Admin User")) {
+                            adminRadio = rb;
+                        } else if (rb.getText().equals("Regular User")) {
+                            userRadio = rb;
+                        }
+                    }
+                    
+                    if ("admin".equals(userType) && adminRadio != null) {
+                        adminRadio.setSelected(true);
+                    } else if (userRadio != null) {
+                        userRadio.setSelected(true);
+                    }
+                    
+                    // Create or update admin profile if administrator
+                    if ("admin".equals(userType)) {
+                        updateAdminProfile(conn, userName, userEmail, userPhone);
+                    }
+                    
+                    openMainApplication(userEmail, userName);
+                    return;
+                }
+            }
+            
+            // If authentication fails, show error
+            showAlert("Login Failed", "Invalid username/email or password. Please try again.");
+            
+        } catch (SQLException e) {
+            System.err.println("Database error during login: " + e.getMessage());
+            showAlert("Database Error", "Unable to connect to database. Please try again later.");
+        }
+    }
+    
+    private void updateAdminProfile(Connection conn, String name, String email, String phone) {
+        try {
+            String adminSQL = "INSERT INTO admin_profile (name, email, phone, department, password_hash) " +
+                             "VALUES (?, ?, ?, ?, ?) ON CONFLICT (email) DO UPDATE SET " +
+                             "name = EXCLUDED.name, phone = EXCLUDED.phone, updated_at = CURRENT_TIMESTAMP";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(adminSQL)) {
+                stmt.setString(1, name);
+                stmt.setString(2, email);
+                stmt.setString(3, phone);
+                stmt.setString(4, "IT Administration");
+                stmt.setString(5, hashPassword("admin123")); // Default admin password
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error updating admin profile: " + e.getMessage());
+        }
+    }
+    
+    private String hashPassword(String password) {
+        // Simple hash for demo - in production use proper hashing like BCrypt
+        return "hashed_" + password.hashCode();
+    }
+    
+    private void openMainApplication(String userEmail, String userName) {
         try {
             Stage currentStage = (Stage) usernameField.getScene().getWindow();
             currentStage.close();
@@ -243,7 +324,7 @@ public class LoginPage extends Application {
             RadioButton selectedRadio = (RadioButton) userTypeGroup.getSelectedToggle();
             String selectedUserType = selectedRadio.getText();
             
-            MainApp mainApp = new MainApp(selectedUserType);
+            MainApp mainApp = new MainApp(selectedUserType, userEmail, userName);
             Stage mainStage = new Stage();
             mainApp.start(mainStage);
         } catch (Exception e) {

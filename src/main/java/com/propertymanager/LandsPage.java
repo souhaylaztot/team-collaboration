@@ -11,6 +11,10 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,22 +32,33 @@ public class LandsPage extends VBox {
     
     private void initData() {
         lands = new ArrayList<>();
-        
-        lands.add(new Land(1, "Sunset Hills Plot", "4500 Hillside Avenue, North District", 
-                          "12,500 sq ft", "Property Holdings LLC", 4500000, "Available", 
-                          "Prime location with city view, zoned for residential development", 3));
-        
-        lands.add(new Land(2, "Downtown Commercial Lot", "1200 Business Street, Downtown", 
-                          "8,000 sq ft", "Metro Investments", 8500000, "Under Development", 
-                          "Commercial zoning, ideal for mixed-use development", 5));
-        
-        lands.add(new Land(3, "Riverside Estate", "7800 River Road, Westside", 
-                          "25,000 sq ft", "Green Valley Partners", 12000000, "Available", 
-                          "Waterfront property with development permits approved", 8));
-        
-        lands.add(new Land(4, "Industrial Park Site", "3400 Factory Lane, Industrial Zone", 
-                          "50,000 sq ft", "Industrial Holdings Inc", 9800000, "Sold", 
-                          "Large industrial plot with warehouse facilities", 12));
+        loadLandsFromDatabase();
+    }
+    
+    private void loadLandsFromDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String query = "SELECT id, name, location, area, owner, estimated_value, status, description, documents_count FROM lands ORDER BY name";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                
+                while (rs.next()) {
+                    Land land = new Land(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("location"),
+                        rs.getString("area"),
+                        rs.getString("owner"),
+                        rs.getDouble("estimated_value"),
+                        rs.getString("status"),
+                        rs.getString("description"),
+                        rs.getInt("documents_count")
+                    );
+                    lands.add(land);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     private void initPage() {
@@ -260,9 +275,11 @@ public class LandsPage extends VBox {
         
         Button editBtn = new Button("✏️ Edit");
         editBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6c757d; -fx-border-radius: 4; -fx-padding: 6 12;");
+        editBtn.setOnAction(e -> showEditLandDialog(land));
         
         Button deleteBtn = new Button("🗑️");
         deleteBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #dc3545; -fx-text-fill: #dc3545; -fx-border-radius: 4; -fx-padding: 6 8;");
+        deleteBtn.setOnAction(e -> deleteLand(land));
         
         footer.getChildren().addAll(docsLabel, footerSpacer, editBtn, deleteBtn);
         
@@ -343,5 +360,142 @@ public class LandsPage extends VBox {
         Scene scene = new Scene(content, 600, 600);
         dialog.setScene(scene);
         dialog.showAndWait();
+    }
+    
+    private void showEditLandDialog(Land land) {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setTitle("Edit Land Property");
+        
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        
+        Label title = new Label("Edit Land Property");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        
+        GridPane form = new GridPane();
+        form.setHgap(15);
+        form.setVgap(15);
+        
+        TextField nameField = new TextField(land.name);
+        TextField locationField = new TextField(land.location);
+        TextField areaField = new TextField(land.area.replace(" sq ft", "").replace(",", ""));
+        TextField valueField = new TextField(String.valueOf((int)land.estimatedValue));
+        TextField ownerField = new TextField(land.owner);
+        
+        ComboBox<String> statusBox = new ComboBox<>();
+        statusBox.getItems().addAll("Available", "Under Development", "Sold");
+        statusBox.setValue(land.status);
+        
+        TextArea descArea = new TextArea(land.description);
+        descArea.setPrefRowCount(3);
+        
+        form.add(new Label("Property Name:"), 0, 0);
+        form.add(nameField, 1, 0);
+        form.add(new Label("Location:"), 0, 1);
+        form.add(locationField, 1, 1);
+        form.add(new Label("Area (sq ft):"), 0, 2);
+        form.add(areaField, 1, 2);
+        form.add(new Label("Estimated Value (MAD):"), 0, 3);
+        form.add(valueField, 1, 3);
+        form.add(new Label("Owner:"), 0, 4);
+        form.add(ownerField, 1, 4);
+        form.add(new Label("Status:"), 0, 5);
+        form.add(statusBox, 1, 5);
+        form.add(new Label("Description:"), 0, 6);
+        form.add(descArea, 1, 6);
+        
+        HBox buttons = new HBox(10);
+        buttons.setAlignment(Pos.CENTER_RIGHT);
+        
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction(e -> dialog.close());
+        
+        Button updateBtn = new Button("Update Land");
+        updateBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-background-radius: 4;");
+        updateBtn.setOnAction(e -> {
+            if (validateForm(nameField, locationField, areaField, valueField, ownerField, statusBox)) {
+                updateLand(land, nameField.getText(), locationField.getText(), 
+                          areaField.getText(), valueField.getText(), ownerField.getText(), 
+                          statusBox.getValue(), descArea.getText());
+                dialog.close();
+            }
+        });
+        
+        buttons.getChildren().addAll(cancelBtn, updateBtn);
+        content.getChildren().addAll(title, form, buttons);
+        
+        Scene scene = new Scene(content, 600, 600);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+    }
+    
+    private void updateLand(Land land, String name, String location, String area, 
+                           String value, String owner, String status, String description) {
+        try {
+            land.name = name;
+            land.location = location;
+            land.area = NumberFormat.getInstance(Locale.FRANCE).format(Integer.parseInt(area)) + " sq ft";
+            land.estimatedValue = Double.parseDouble(value);
+            land.owner = owner;
+            land.status = status;
+            land.description = description;
+            
+            updateLandsGrid();
+            showSuccessAlert("Land Updated", "Land property has been updated successfully!");
+        } catch (NumberFormatException e) {
+            showErrorAlert("Invalid Input", "Please enter valid numbers for area and value.");
+        }
+    }
+    
+    private void deleteLand(Land land) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Land");
+        alert.setHeaderText("Delete " + land.name + "?");
+        alert.setContentText("This action cannot be undone. Are you sure you want to delete this land property?");
+        
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                lands.remove(land);
+                updateLandsGrid();
+                showSuccessAlert("Land Deleted", "Land property has been deleted successfully!");
+            }
+        });
+    }
+    
+    private boolean validateForm(TextField nameField, TextField locationField, TextField areaField, 
+                                TextField valueField, TextField ownerField, ComboBox<String> statusBox) {
+        if (nameField.getText().trim().isEmpty() || locationField.getText().trim().isEmpty() || 
+            areaField.getText().trim().isEmpty() || valueField.getText().trim().isEmpty() || 
+            ownerField.getText().trim().isEmpty() || statusBox.getValue() == null) {
+            showErrorAlert("Validation Error", "Please fill in all required fields.");
+            return false;
+        }
+        
+        try {
+            Integer.parseInt(areaField.getText().trim());
+            Double.parseDouble(valueField.getText().trim());
+        } catch (NumberFormatException e) {
+            showErrorAlert("Invalid Input", "Please enter valid numbers for area and value.");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private void showSuccessAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+    
+    private void showErrorAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

@@ -1,354 +1,387 @@
 package com.propertymanager;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-
-import java.text.NumberFormat;
-import java.util.ArrayList;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 public class BuyersPage extends VBox {
+    private VBox content;
+    private String title = "Buyer & Payment Management";
     
-    private List<Buyer> buyers;
-    private ObservableList<Buyer> filteredBuyers;
-    private TableView<Buyer> buyersTable;
-    private String selectedTab = "all";
+    private ObservableList<Buyer> buyers;
+    private FilteredList<Buyer> filteredBuyers;
+    private TabPane tabPane;
+    private TableView<Buyer> tableView;
     
-    // Stats
-    private Label totalCollectedLabel;
-    private Label pendingLabel;
-    private Label overdueLabel;
-    
+    // Payment statistics
+    private long totalCollected = 13600000;
+    private long pending = 2900000;
+    private long overdue = 1000000;
+
     public BuyersPage() {
-        initData();
-        initPage();
-        updateStats();
+        content = new VBox();
+        content.setStyle("-fx-background-color: #F8FAFC;");
+        content.setPadding(new Insets(32));
+        content.setSpacing(24);
+        
+        initializeData();
+        createUI();
+        
+        // Add content to this VBox
+        this.setStyle("-fx-background-color: #F8FAFC;");
+        getChildren().add(content);
+    }
+
+    private void initializeData() {
+        buyers = FXCollections.observableArrayList();
+        loadBuyersFromDatabase();
+        filteredBuyers = new FilteredList<>(buyers);
+        filteredBuyers.setPredicate(buyer -> true); // Show all initially
     }
     
-    private void initData() {
-        buyers = new ArrayList<>();
-        
-        buyers.add(new Buyer(1, "John Smith", "Skyline Tower - 101", "+212 6 12 34 56 78", 
-                           "john.smith@email.com", "2024-01-15", 2500000, 2500000, "paid", "2024-01-15", "N/A"));
-        
-        buyers.add(new Buyer(2, "Sarah Johnson", "Riverside - 205", "+212 6 23 45 67 89", 
-                           "sarah.j@email.com", "2024-03-20", 3200000, 2800000, "partial", "2025-10-15", "2025-11-15"));
-        
-        buyers.add(new Buyer(3, "Mike Brown", "Garden View - 312", "+212 6 34 56 78 90", 
-                           "mike.brown@email.com", "2024-06-10", 4500000, 3000000, "partial", "2025-09-20", "2025-11-20"));
-        
-        buyers.add(new Buyer(4, "Emma Davis", "Metro Heights - 405", "+212 6 45 67 89 01", 
-                           "emma.davis@email.com", "2024-02-28", 2800000, 1800000, "overdue", "2025-08-10", "2025-10-10"));
-        
-        buyers.add(new Buyer(5, "David Wilson", "Skyline Tower - 508", "+212 6 56 78 90 12", 
-                           "david.w@email.com", "2024-04-25", 3500000, 3500000, "paid", "2024-04-25", "N/A"));
-        
-        filteredBuyers = FXCollections.observableArrayList(buyers);
+    private void loadBuyersFromDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String query = "SELECT b.id, b.name, b.phone, b.email, b.purchase_date, " +
+                          "b.purchase_amount, b.paid_amount, b.remaining_amount, b.payment_status, " +
+                          "b.last_payment_date, b.next_due_date, " +
+                          "CONCAT(bd.name, ' - ', a.apartment_number) as property " +
+                          "FROM buyers b " +
+                          "LEFT JOIN property_purchases pp ON b.id = pp.buyer_id " +
+                          "LEFT JOIN apartments a ON pp.apartment_id = a.id " +
+                          "LEFT JOIN buildings bd ON a.building_id = bd.id " +
+                          "ORDER BY b.name";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                
+                while (rs.next()) {
+                    String lastPayment = rs.getDate("last_payment_date") != null ? 
+                                       rs.getDate("last_payment_date").toString() : "N/A";
+                    String nextDue = rs.getDate("next_due_date") != null ? 
+                                   rs.getDate("next_due_date").toString() : "N/A";
+                    
+                    Buyer buyer = new Buyer(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("property") != null ? rs.getString("property") : "No Property",
+                        rs.getString("phone"),
+                        rs.getString("email"),
+                        rs.getDate("purchase_date").toString(),
+                        (int) rs.getLong("purchase_amount"),
+                        (int) rs.getLong("paid_amount"),
+                        (int) rs.getLong("remaining_amount"),
+                        rs.getString("payment_status"),
+                        lastPayment,
+                        nextDue
+                    );
+                    buyers.add(buyer);
+                }
+            }
+            
+            // Update payment statistics
+            updatePaymentStatistics(conn);
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showError("Database Error", "Failed to load buyers from database: " + e.getMessage());
+        }
     }
     
-    private void initPage() {
-        setPadding(new Insets(30));
-        setSpacing(20);
-        setStyle("-fx-background-color: #f8f9fa;");
+    private void updatePaymentStatistics(Connection conn) throws SQLException {
+        String statsQuery = "SELECT " +
+                           "SUM(paid_amount) as total_collected, " +
+                           "SUM(CASE WHEN payment_status = 'partial' OR payment_status = 'pending' THEN remaining_amount ELSE 0 END) as pending, " +
+                           "SUM(CASE WHEN payment_status = 'overdue' THEN remaining_amount ELSE 0 END) as overdue " +
+                           "FROM buyers";
         
+        try (PreparedStatement stmt = conn.prepareStatement(statsQuery)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                totalCollected = rs.getLong("total_collected");
+                pending = rs.getLong("pending");
+                overdue = rs.getLong("overdue");
+            }
+        }
+    }
+
+    private void createUI() {
         // Header
         HBox header = createHeader();
-        
-        // Stats cards
-        HBox statsCards = createStatsCards();
-        
-        // Buyers table
-        VBox tableContainer = createTableContainer();
-        
-        getChildren().addAll(header, statsCards, tableContainer);
+        content.getChildren().add(header);
+
+        // Payment Stats
+        HBox statsGrid = createPaymentStats();
+        content.getChildren().add(statsGrid);
+
+        // Buyers Table with Tabs
+        VBox buyersSection = createBuyersSection();
+        content.getChildren().add(buyersSection);
+        VBox.setVgrow(buyersSection, Priority.ALWAYS);
     }
-    
+
     private HBox createHeader() {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
-        
-        VBox titleBox = new VBox(5);
-        Label title = new Label("Buyer & Payment Management");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 28));
-        title.setTextFill(Color.web("#2c3e50"));
-        
-        Label subtitle = new Label("Manage property buyers and payment tracking");
-        subtitle.setFont(Font.font("Arial", 14));
-        subtitle.setTextFill(Color.GRAY);
-        
-        titleBox.getChildren().addAll(title, subtitle);
-        
+        header.setSpacing(16);
+
+        VBox titleSection = new VBox(8);
+        Label titleLabel = new Label("Buyer & Payment Management");
+        titleLabel.getStyleClass().add("page-title");
+
+        Label subtitleLabel = new Label("Manage property buyers and payment tracking");
+        subtitleLabel.getStyleClass().add("page-subtitle");
+
+        titleSection.getChildren().addAll(titleLabel, subtitleLabel);
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        
-        // Export menu
-        MenuButton exportBtn = new MenuButton("📥 Export");
-        exportBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6c757d; -fx-border-radius: 8; -fx-padding: 8 16;");
-        
-        MenuItem pdfItem = new MenuItem("📄 Export as PDF");
-        MenuItem excelItem = new MenuItem("📊 Export as Excel");
-        MenuItem csvItem = new MenuItem("📋 Export as CSV");
-        
-        exportBtn.getItems().addAll(pdfItem, excelItem, csvItem);
-        
-        Button addBtn = new Button("+ Add Buyer");
-        addBtn.setStyle("-fx-background-color: linear-gradient(135deg, #2C3E8C, #4FD1C5); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 12 20;");
-        addBtn.setOnAction(e -> showAddBuyerDialog());
-        
-        header.getChildren().addAll(titleBox, spacer, exportBtn, addBtn);
+
+        Button exportBtn = new Button("Export");
+        exportBtn.getStyleClass().add("secondary-button");
+        exportBtn.setOnAction(e -> showExportDialog());
+
+        Button addBuyerBtn = new Button("+ Add Buyer");
+        addBuyerBtn.getStyleClass().add("primary-button");
+        addBuyerBtn.setOnAction(e -> showAddBuyerDialog());
+
+        HBox buttonContainer = new HBox(12, exportBtn, addBuyerBtn);
+        buttonContainer.setAlignment(Pos.CENTER_RIGHT);
+
+        header.getChildren().addAll(titleSection, spacer, buttonContainer);
         return header;
     }
-    
-    private HBox createStatsCards() {
-        HBox statsBox = new HBox(20);
-        statsBox.setAlignment(Pos.CENTER);
+
+    private HBox createPaymentStats() {
+        HBox statsGrid = new HBox(24);
+        statsGrid.setAlignment(Pos.CENTER_LEFT);
+
+        // Total Collected Card
+        VBox totalCard = createStatCard("Total Collected", 
+                                       String.format("%,d MAD", totalCollected), 
+                                       "💰", "#10B981", "#059669");
         
-        // Total Collected
-        VBox totalCard = createStatCard("Total Collected", "13,600,000 MAD", "💰", "#10b981");
+        // Pending Payment Card
+        VBox pendingCard = createStatCard("Pending Payment", 
+                                         String.format("%,d MAD", pending), 
+                                         "📅", "#F59E0B", "#D97706");
         
-        // Pending Payment
-        VBox pendingCard = createStatCard("Pending Payment", "2,900,000 MAD", "📅", "#f59e0b");
-        
-        // Overdue
-        VBox overdueCard = createStatCard("Overdue", "1,000,000 MAD", "⚠️", "#dc3545");
-        
-        statsBox.getChildren().addAll(totalCard, pendingCard, overdueCard);
-        return statsBox;
+        // Overdue Card
+        VBox overdueCard = createStatCard("Overdue", 
+                                         String.format("%,d MAD", overdue), 
+                                         "⚠️", "#EF4444", "#DC2626");
+
+        statsGrid.getChildren().addAll(totalCard, pendingCard, overdueCard);
+        return statsGrid;
     }
-    
-    private VBox createStatCard(String title, String value, String icon, String color) {
-        VBox card = new VBox(15);
-        card.setPrefWidth(350);
-        card.setPrefHeight(120);
-        card.setPadding(new Insets(20));
-        card.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-border-color: rgba(255, 255, 255, 0.3); -fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
-        
-        HBox header = new HBox();
-        header.setAlignment(Pos.CENTER_LEFT);
-        
-        VBox textBox = new VBox(5);
+
+    private VBox createStatCard(String title, String value, String icon, String startColor, String endColor) {
+        VBox card = new VBox();
+        card.setPrefSize(280, 120);
+        card.getStyleClass().add("stat-card");
+
+        HBox boxContent = new HBox();
+        boxContent.setAlignment(Pos.CENTER_LEFT);
+        boxContent.setSpacing(16);
+
+        VBox textSection = new VBox(8);
         Label titleLabel = new Label(title);
-        titleLabel.setFont(Font.font("Arial", 12));
-        titleLabel.setTextFill(Color.GRAY);
-        
+        titleLabel.getStyleClass().add("stat-label");
+
         Label valueLabel = new Label(value);
-        valueLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        valueLabel.setTextFill(Color.web(color));
-        
-        textBox.getChildren().addAll(titleLabel, valueLabel);
-        
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        
+        valueLabel.getStyleClass().add("stat-number");
+
+        textSection.getChildren().addAll(titleLabel, valueLabel);
+
+        // Icon with gradient background
+        StackPane iconContainer = new StackPane();
+        iconContainer.setPrefSize(48, 48);
+        iconContainer.setStyle(String.format("-fx-background-color: linear-gradient(to bottom right, %s, %s); -fx-background-radius: 12;", 
+                                           startColor, endColor));
+        iconContainer.setAlignment(Pos.CENTER);
+
         Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 12; -fx-font-size: 20px;");
-        
-        header.getChildren().addAll(textBox, spacer, iconLabel);
-        card.getChildren().add(header);
-        
+        iconLabel.getStyleClass().add("icon-text");
+
+        iconContainer.getChildren().add(iconLabel);
+
+        Region spacerRegion = new Region();
+        HBox.setHgrow(spacerRegion, Priority.ALWAYS);
+
+        boxContent.getChildren().addAll(textSection, spacerRegion, iconContainer);
+        card.getChildren().add(boxContent);
+
         return card;
     }
-    
-    private VBox createTableContainer() {
-        VBox container = new VBox(15);
-        container.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-border-color: rgba(255, 255, 255, 0.3); -fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
-        container.setPadding(new Insets(20));
+
+    private VBox createBuyersSection() {
+        VBox section = new VBox();
+        section.getStyleClass().add("content-card");
+        section.setPadding(new Insets(20));
+        section.setSpacing(16);
+
+        // Search bar for buyers
+        HBox searchBar = new HBox(12);
+        searchBar.setAlignment(Pos.CENTER_LEFT);
+        searchBar.setPadding(new Insets(0, 0, 16, 0));
+        
+        TextField buyerSearchField = new TextField();
+        buyerSearchField.setPromptText("Search buyers by name, property, or email...");
+        buyerSearchField.getStyleClass().add("search-field");
+        buyerSearchField.setPrefWidth(400);
+        
+        buyerSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterBuyersBySearch(newValue);
+        });
+        
+        searchBar.getChildren().add(buyerSearchField);
         
         // Tabs
-        HBox tabs = createTabs();
+        tabPane = new TabPane();
+        tabPane.getStyleClass().add("tab-pane");
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         
-        // Table
-        buyersTable = createBuyersTable();
+        Tab allTab = new Tab("All Buyers");
+        allTab.setClosable(false);
+        Tab paidTab = new Tab("Fully Paid");
+        paidTab.setClosable(false);
+        Tab partialTab = new Tab("Partial Payment");
+        partialTab.setClosable(false);
+        Tab overdueTab = new Tab("Overdue");
+        overdueTab.setClosable(false);
         
-        container.getChildren().addAll(tabs, buyersTable);
-        return container;
-    }
-    
-    private HBox createTabs() {
-        HBox tabs = new HBox(10);
+        tabPane.getTabs().addAll(allTab, paidTab, partialTab, overdueTab);
         
-        Button allTab = createTabButton("All Buyers", "all");
-        Button paidTab = createTabButton("Fully Paid", "paid");
-        Button partialTab = createTabButton("Partial Payment", "partial");
-        Button overdueTab = createTabButton("Overdue", "overdue");
-        
-        tabs.getChildren().addAll(allTab, paidTab, partialTab, overdueTab);
-        return tabs;
-    }
-    
-    private Button createTabButton(String text, String tabId) {
-        Button tab = new Button(text);
-        tab.setPrefHeight(35);
-        tab.setPadding(new Insets(8, 16, 8, 16));
-        
-        if (tabId.equals(selectedTab)) {
-            tab.setStyle("-fx-background-color: #2C3E8C; -fx-text-fill: white; -fx-background-radius: 6;");
-        } else {
-            tab.setStyle("-fx-background-color: transparent; -fx-text-fill: #6c757d; -fx-border-color: #e9ecef; -fx-border-radius: 6; -fx-background-radius: 6;");
-        }
-        
-        tab.setOnAction(e -> {
-            selectedTab = tabId;
-            filterBuyers();
-            updateTabStyles();
+        // Add listener for tab changes
+        tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            filterBuyersByTab(newTab.getText());
         });
+
+        // Table
+        tableView = createBuyersTable();
         
-        return tab;
+        section.getChildren().addAll(searchBar, tabPane, tableView);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+        
+        return section;
     }
-    
-    private void updateTabStyles() {
-        // This would update tab styles - simplified for this implementation
-        filterBuyers();
-    }
-    
+
     private TableView<Buyer> createBuyersTable() {
         TableView<Buyer> table = new TableView<>();
-        table.setPrefHeight(400);
+        table.setItems(filteredBuyers);
+        table.getStyleClass().add("table-view");
         
-        // Name column
+        // Name Column
         TableColumn<Buyer, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        nameCol.setPrefWidth(150);
+        nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+        nameCol.setPrefWidth(130);
         
-        // Contact column
-        TableColumn<Buyer, String> contactCol = new TableColumn<>("Contact");
-        contactCol.setPrefWidth(200);
-        contactCol.setCellFactory(col -> new TableCell<Buyer, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow().getItem() == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    Buyer buyer = getTableRow().getItem();
-                    VBox contact = new VBox(2);
-                    Label phone = new Label("📞 " + buyer.phone);
-                    phone.setFont(Font.font(10));
-                    Label email = new Label("✉️ " + buyer.email);
-                    email.setFont(Font.font(10));
-                    contact.getChildren().addAll(phone, email);
-                    setGraphic(contact);
-                    setText(null);
-                }
-            }
-        });
+        // Phone Column
+        TableColumn<Buyer, String> phoneCol = new TableColumn<>("Phone");
+        phoneCol.setCellValueFactory(cellData -> cellData.getValue().phoneProperty());
+        phoneCol.setPrefWidth(130);
         
-        // Property column
+        // Email Column
+        TableColumn<Buyer, String> emailCol = new TableColumn<>("Email");
+        emailCol.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
+        emailCol.setPrefWidth(150);
+        
+        // Property Column
         TableColumn<Buyer, String> propertyCol = new TableColumn<>("Property");
-        propertyCol.setCellValueFactory(new PropertyValueFactory<>("property"));
-        propertyCol.setPrefWidth(150);
+        propertyCol.setCellValueFactory(cellData -> cellData.getValue().propertyProperty());
+        propertyCol.setPrefWidth(140);
         
-        // Purchase Date column
-        TableColumn<Buyer, String> dateCol = new TableColumn<>("Purchase Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("purchaseDate"));
-        dateCol.setPrefWidth(120);
+        // Purchase Date Column
+        TableColumn<Buyer, String> purchaseDateCol = new TableColumn<>("Purchase Date");
+        purchaseDateCol.setCellValueFactory(cellData -> cellData.getValue().purchaseDateProperty());
+        purchaseDateCol.setPrefWidth(110);
         
-        // Amount column
-        TableColumn<Buyer, Double> amountCol = new TableColumn<>("Amount");
-        amountCol.setCellValueFactory(new PropertyValueFactory<>("purchaseAmount"));
+        // Amount Column
+        TableColumn<Buyer, String> amountCol = new TableColumn<>("Amount");
+        amountCol.setCellValueFactory(cellData -> cellData.getValue().purchaseAmountFormattedProperty());
         amountCol.setPrefWidth(120);
-        amountCol.setCellFactory(col -> new TableCell<Buyer, Double>() {
-            @Override
-            protected void updateItem(Double amount, boolean empty) {
-                super.updateItem(amount, empty);
-                if (empty || amount == null) {
-                    setText(null);
-                } else {
-                    NumberFormat formatter = NumberFormat.getInstance(Locale.FRANCE);
-                    setText(formatter.format(amount) + " MAD");
-                }
-            }
-        });
         
-        // Remaining column
-        TableColumn<Buyer, Double> remainingCol = new TableColumn<>("Remaining");
-        remainingCol.setCellValueFactory(new PropertyValueFactory<>("remainingAmount"));
+        // Remaining Column
+        TableColumn<Buyer, String> remainingCol = new TableColumn<>("Remaining");
+        remainingCol.setCellValueFactory(cellData -> cellData.getValue().remainingAmountFormattedProperty());
         remainingCol.setPrefWidth(120);
-        remainingCol.setCellFactory(col -> new TableCell<Buyer, Double>() {
-            @Override
-            protected void updateItem(Double remaining, boolean empty) {
-                super.updateItem(remaining, empty);
-                if (empty || remaining == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    NumberFormat formatter = NumberFormat.getInstance(Locale.FRANCE);
-                    setText(formatter.format(remaining) + " MAD");
-                    if (remaining > 0) {
-                        setTextFill(Color.RED);
-                    } else {
-                        setTextFill(Color.GREEN);
-                    }
-                }
-            }
-        });
         
-        // Status column
+        // Status Column
         TableColumn<Buyer, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(new PropertyValueFactory<>("paymentStatus"));
-        statusCol.setPrefWidth(120);
-        statusCol.setCellFactory(col -> new TableCell<Buyer, String>() {
+        statusCol.setCellValueFactory(cellData -> cellData.getValue().paymentStatusProperty());
+        statusCol.setCellFactory(column -> new TableCell<Buyer, String>() {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
                 if (empty || status == null) {
-                    setText(null);
-                    setStyle("");
+                    setGraphic(null);
                 } else {
                     Label badge = new Label();
+                    badge.getStyleClass().clear();
                     switch (status) {
                         case "paid":
                             badge.setText("Fully Paid");
-                            badge.setStyle("-fx-background-color: #d4edda; -fx-text-fill: #155724; -fx-background-radius: 4; -fx-padding: 2 8;");
+                            badge.getStyleClass().add("status-badge-paid");
                             break;
                         case "partial":
                             badge.setText("Partial Payment");
-                            badge.setStyle("-fx-background-color: #fff3cd; -fx-text-fill: #856404; -fx-background-radius: 4; -fx-padding: 2 8;");
+                            badge.getStyleClass().add("status-badge-partial");
                             break;
                         case "overdue":
                             badge.setText("Overdue");
-                            badge.setStyle("-fx-background-color: #f8d7da; -fx-text-fill: #721c24; -fx-background-radius: 4; -fx-padding: 2 8;");
+                            badge.getStyleClass().add("status-badge-overdue");
                             break;
                     }
                     setGraphic(badge);
-                    setText(null);
                 }
             }
         });
+        statusCol.setPrefWidth(110);
         
-        // Next Due column
+        // Next Due Column
         TableColumn<Buyer, String> nextDueCol = new TableColumn<>("Next Due");
-        nextDueCol.setCellValueFactory(new PropertyValueFactory<>("nextDue"));
+        nextDueCol.setCellValueFactory(cellData -> cellData.getValue().nextDueProperty());
         nextDueCol.setPrefWidth(100);
         
-        // Actions column
+        // Actions Column
         TableColumn<Buyer, Void> actionsCol = new TableColumn<>("Actions");
-        actionsCol.setPrefWidth(150);
-        actionsCol.setCellFactory(col -> new TableCell<Buyer, Void>() {
+        actionsCol.setCellFactory(param -> new TableCell<Buyer, Void>() {
             private final Button receiptBtn = new Button("📄");
             private final Button editBtn = new Button("✏️");
             private final Button deleteBtn = new Button("🗑️");
-            private final HBox buttons = new HBox(5, receiptBtn, editBtn, deleteBtn);
+            private final HBox buttons = new HBox(8);
             
             {
-                receiptBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6c757d; -fx-border-radius: 4; -fx-padding: 4 8;");
-                editBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6c757d; -fx-border-radius: 4; -fx-padding: 4 8;");
-                deleteBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #dc3545; -fx-text-fill: #dc3545; -fx-border-radius: 4; -fx-padding: 4 8;");
+                receiptBtn.getStyleClass().add("action-button");
+                editBtn.getStyleClass().add("action-button");
+                deleteBtn.getStyleClass().add("action-button-danger");
                 
-                receiptBtn.setTooltip(new Tooltip("Generate Receipt"));
+                receiptBtn.setOnAction(e -> {
+                    Buyer buyer = getTableView().getItems().get(getIndex());
+                    generateReceipt(buyer);
+                });
+                editBtn.setOnAction(e -> {
+                    Buyer buyer = getTableView().getItems().get(getIndex());
+                    editBuyer(buyer);
+                });
+                deleteBtn.setOnAction(e -> {
+                    Buyer buyer = getTableView().getItems().get(getIndex());
+                    deleteBuyer(buyer);
+                });
+                
+                buttons.getChildren().addAll(receiptBtn, editBtn, deleteBtn);
+                buttons.setAlignment(Pos.CENTER);
             }
             
             @Override
@@ -361,104 +394,185 @@ public class BuyersPage extends VBox {
                 }
             }
         });
+        actionsCol.setPrefWidth(110);
         
-        table.getColumns().addAll(nameCol, contactCol, propertyCol, dateCol, amountCol, remainingCol, statusCol, nextDueCol, actionsCol);
-        table.setItems(filteredBuyers);
+        table.getColumns().addAll(nameCol, phoneCol, emailCol, propertyCol, purchaseDateCol, 
+                                 amountCol, remainingCol, statusCol, nextDueCol, actionsCol);
         
         return table;
     }
-    
-    private void filterBuyers() {
-        filteredBuyers.clear();
-        if ("all".equals(selectedTab)) {
-            filteredBuyers.addAll(buyers);
-        } else {
-            for (Buyer buyer : buyers) {
-                if (buyer.paymentStatus.equals(selectedTab)) {
-                    filteredBuyers.add(buyer);
-                }
-            }
+
+    private void filterBuyersByTab(String tabText) {
+        switch (tabText) {
+            case "All Buyers":
+                filteredBuyers.setPredicate(buyer -> true);
+                break;
+            case "Fully Paid":
+                filteredBuyers.setPredicate(buyer -> "paid".equals(buyer.getPaymentStatus()));
+                break;
+            case "Partial Payment":
+                filteredBuyers.setPredicate(buyer -> "partial".equals(buyer.getPaymentStatus()));
+                break;
+            case "Overdue":
+                filteredBuyers.setPredicate(buyer -> "overdue".equals(buyer.getPaymentStatus()));
+                break;
         }
     }
     
-    private void updateStats() {
-        double totalCollected = buyers.stream().mapToDouble(b -> b.paidAmount).sum();
-        double pending = buyers.stream().filter(b -> "partial".equals(b.paymentStatus)).mapToDouble(b -> b.remainingAmount).sum();
-        double overdue = buyers.stream().filter(b -> "overdue".equals(b.paymentStatus)).mapToDouble(b -> b.remainingAmount).sum();
+    private void filterBuyersBySearch(String searchText) {
+        if (searchText == null || searchText.trim().isEmpty()) {
+            // Reset to current tab filter
+            Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+            if (selectedTab != null) {
+                filterBuyersByTab(selectedTab.getText());
+            }
+            return;
+        }
         
-        NumberFormat formatter = NumberFormat.getInstance(Locale.FRANCE);
+        String lowerSearchText = searchText.toLowerCase();
+        filteredBuyers.setPredicate(buyer -> 
+            buyer.getName().toLowerCase().contains(lowerSearchText) ||
+            buyer.getProperty().toLowerCase().contains(lowerSearchText) ||
+            buyer.getEmail().toLowerCase().contains(lowerSearchText) ||
+            buyer.getPhone().toLowerCase().contains(lowerSearchText)
+        );
     }
-    
+
+    private void showExportDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Export Buyers");
+        alert.setHeaderText("Export Buyer Data");
+        alert.setContentText("Export formats available:\n\n" +
+                "• PDF - Professional formatted document\n" +
+                "• Excel (XLSX) - Spreadsheet with formulas\n" +
+                "• CSV - Comma-separated values\n\n" +
+                "Export functionality would be implemented here.");
+        alert.showAndWait();
+    }
+
     private void showAddBuyerDialog() {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
+        Dialog<Buyer> dialog = new Dialog<>();
         dialog.setTitle("Register New Buyer");
-        
-        VBox content = new VBox(15);
-        content.setPadding(new Insets(20));
-        
-        Label title = new Label("Register New Buyer");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        
-        GridPane form = new GridPane();
-        form.setHgap(15);
-        form.setVgap(15);
-        
+        dialog.setHeaderText("Enter buyer details");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
         TextField nameField = new TextField();
         nameField.setPromptText("John Doe");
-        
         TextField phoneField = new TextField();
         phoneField.setPromptText("+212 6 12 34 56 78");
-        
         TextField emailField = new TextField();
         emailField.setPromptText("john.doe@email.com");
-        
-        ComboBox<String> propertyBox = new ComboBox<>();
-        propertyBox.getItems().addAll("Skyline Tower - 101", "Riverside - 205", "Garden View - 312");
-        propertyBox.setPromptText("Select property");
-        
-        DatePicker datePicker = new DatePicker();
-        
-        TextField amountField = new TextField();
-        amountField.setPromptText("2500000");
-        
-        TextField paidField = new TextField();
-        paidField.setPromptText("2500000");
-        
-        form.add(new Label("Full Name:"), 0, 0);
-        form.add(nameField, 1, 0);
-        form.add(new Label("Phone Number:"), 0, 1);
-        form.add(phoneField, 1, 1);
-        form.add(new Label("Email Address:"), 0, 2);
-        form.add(emailField, 1, 2);
-        form.add(new Label("Property:"), 0, 3);
-        form.add(propertyBox, 1, 3);
-        form.add(new Label("Purchase Date:"), 0, 4);
-        form.add(datePicker, 1, 4);
-        form.add(new Label("Purchase Amount (MAD):"), 0, 5);
-        form.add(amountField, 1, 5);
-        form.add(new Label("Amount Paid (MAD):"), 0, 6);
-        form.add(paidField, 1, 6);
-        
-        HBox buttons = new HBox(10);
-        buttons.setAlignment(Pos.CENTER_RIGHT);
-        
-        Button cancelBtn = new Button("Cancel");
-        cancelBtn.setOnAction(e -> dialog.close());
-        
-        Button saveBtn = new Button("Register Buyer");
-        saveBtn.setStyle("-fx-background-color: #2C3E8C; -fx-text-fill: white; -fx-background-radius: 4;");
-        saveBtn.setOnAction(e -> {
-            // Add buyer logic here
-            dialog.close();
+        TextField propertyField = new TextField();
+        propertyField.setPromptText("Skyline Tower - 101");
+        TextField purchaseDateField = new TextField();
+        purchaseDateField.setPromptText("2024-01-15");
+        TextField purchaseAmountField = new TextField();
+        purchaseAmountField.setPromptText("2500000");
+
+        grid.add(new Label("Full Name:"), 0, 0);
+        grid.add(nameField, 1, 0);
+        grid.add(new Label("Phone:"), 0, 1);
+        grid.add(phoneField, 1, 1);
+        grid.add(new Label("Email:"), 0, 2);
+        grid.add(emailField, 1, 2);
+        grid.add(new Label("Property:"), 0, 3);
+        grid.add(propertyField, 1, 3);
+        grid.add(new Label("Purchase Date:"), 0, 4);
+        grid.add(purchaseDateField, 1, 4);
+        grid.add(new Label("Purchase Amount:"), 0, 5);
+        grid.add(purchaseAmountField, 1, 5);
+
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType registerButtonType = new ButtonType("Register", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(registerButtonType, ButtonType.CANCEL);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == registerButtonType) {
+                try {
+                    int amount = Integer.parseInt(purchaseAmountField.getText());
+                    return new Buyer(buyers.size() + 1, nameField.getText(), propertyField.getText(), 
+                                   phoneField.getText(), emailField.getText(), purchaseDateField.getText(),
+                                   amount, 0, amount, "partial", 
+                                   purchaseDateField.getText(), "N/A");
+                } catch (NumberFormatException e) {
+                    showError("Invalid amount", "Purchase amount must be a number");
+                    return null;
+                }
+            }
+            return null;
         });
-        
-        buttons.getChildren().addAll(cancelBtn, saveBtn);
-        
-        content.getChildren().addAll(title, form, buttons);
-        
-        Scene scene = new Scene(content, 600, 500);
-        dialog.setScene(scene);
-        dialog.showAndWait();
+
+        dialog.showAndWait().ifPresent(buyer -> {
+            if (buyer != null) {
+                buyers.add(buyer);
+                tableView.refresh();
+            }
+        });
+    }
+
+    private void generateReceipt(Buyer buyer) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Receipt Generated");
+        alert.setHeaderText("Payment Receipt");
+        alert.setContentText("Receipt Details:\n\n" +
+                "Buyer: " + buyer.getName() + "\n" +
+                "Property: " + buyer.getProperty() + "\n" +
+                "Amount: " + String.format("%,d MAD", buyer.getPurchaseAmount()) + "\n" +
+                "Paid: " + String.format("%,d MAD", buyer.getPaidAmount()) + "\n" +
+                "Remaining: " + String.format("%,d MAD", buyer.getRemainingAmount()) + "\n\n" +
+                "Receipt has been generated successfully.");
+        alert.showAndWait();
+    }
+
+    private void editBuyer(Buyer buyer) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Edit Buyer");
+        alert.setHeaderText("Edit Buyer: " + buyer.getName());
+        alert.setContentText("Current Details:\n\n" +
+                "Name: " + buyer.getName() + "\n" +
+                "Phone: " + buyer.getPhone() + "\n" +
+                "Email: " + buyer.getEmail() + "\n" +
+                "Property: " + buyer.getProperty() + "\n" +
+                "Purchase Amount: " + String.format("%,d MAD", buyer.getPurchaseAmount()) + "\n" +
+                "Payment Status: " + buyer.getPaymentStatus() + "\n\n" +
+                "Edit dialog would open here with form fields.");
+        alert.showAndWait();
+    }
+
+    private void deleteBuyer(Buyer buyer) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Buyer");
+        alert.setHeaderText("Delete " + buyer.getName() + "?");
+        alert.setContentText("Are you sure you want to delete this buyer record?\n" +
+                "Property: " + buyer.getProperty() + "\n\n" +
+                "This action cannot be undone.");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                buyers.remove(buyer);
+                tableView.refresh();
+            }
+        });
+    }
+
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(title);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public VBox getContent() {
+        return content;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }

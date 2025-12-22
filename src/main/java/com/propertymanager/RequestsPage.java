@@ -10,6 +10,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,29 +33,92 @@ public class RequestsPage extends VBox {
     
     private void initRequests() {
         requests = new ArrayList<>();
-        
+        loadRequestsFromDatabase();
+    }
+    
+    private void loadRequestsFromDatabase() {
+        // Add sample requests for demonstration
         List<Message> messages1 = new ArrayList<>();
-        messages1.add(new Message(1, "John Smith", "Hi, I would like to know the process for renewing my lease which expires in January.", "2025-11-05 09:30", false));
+        messages1.add(new Message(1, "Emma Davis", "I have been experiencing a water leak in my bathroom for the past 3 days. The water is coming from under the sink and has started to damage the floor. Please send someone to fix this as soon as possible.", "2025-12-22 09:30", false));
+        messages1.add(new Message(2, "Admin", "Thank you for reporting this issue. We have scheduled a maintenance technician to visit your apartment tomorrow at 2 PM. Please ensure someone is available to provide access.", "2025-12-22 10:15", true));
+        messages1.add(new Message(3, "Emma Davis", "Perfect, I will be available at that time. Thank you for the quick response!", "2025-12-22 10:20", false));
         
         List<Message> messages2 = new ArrayList<>();
-        messages2.add(new Message(1, "Sarah Johnson", "I need a proof of residence document for my bank application. Can you provide this?", "2025-11-04 14:20", false));
-        messages2.add(new Message(2, "Admin", "Hello Sarah, we can provide that for you. The document will be ready by tomorrow. You can pick it up from the office.", "2025-11-04 16:45", true));
+        messages2.add(new Message(1, "John Smith", "I need a copy of my lease agreement for insurance purposes. Could you please provide me with a digital copy?", "2025-12-22 08:45", false));
         
         List<Message> messages3 = new ArrayList<>();
-        messages3.add(new Message(1, "Mike Brown", "There has been excessive noise from the apartment above mine (Apt 412) late at night for the past week.", "2025-11-03 22:15", false));
-        messages3.add(new Message(2, "Admin", "Thank you for reporting this. We will contact the tenant in Apt 412 and address this issue.", "2025-11-04 09:00", true));
-        messages3.add(new Message(3, "Mike Brown", "Thank you. Please keep me updated.", "2025-11-04 09:30", false));
+        messages3.add(new Message(1, "Sarah Wilson", "The elevator in our building has been making strange noises and sometimes stops between floors. This is concerning for safety reasons.", "2025-12-21 16:20", false));
+        messages3.add(new Message(2, "Admin", "We have contacted the elevator maintenance company and they will inspect it first thing Monday morning. We will post notices about temporary service interruption.", "2025-12-21 17:00", true));
         
         List<Message> messages4 = new ArrayList<>();
-        messages4.add(new Message(1, "Emma Davis", "I recently purchased a second vehicle and need an additional parking space. Is one available?", "2025-10-28 11:00", false));
-        messages4.add(new Message(2, "Admin", "We have checked availability and space P-42 is available for 500 MAD/month. Would you like to proceed?", "2025-10-28 15:30", true));
-        messages4.add(new Message(3, "Emma Davis", "Yes, please. How do I complete the registration?", "2025-10-29 08:20", false));
-        messages4.add(new Message(4, "Admin", "Perfect! Space P-42 has been assigned to you. The updated agreement has been sent to your email.", "2025-10-29 10:00", true));
+        messages4.add(new Message(1, "Mike Johnson", "My neighbors in apartment 306 have been playing loud music late at night. This has been going on for over a week and is affecting my sleep.", "2025-12-20 22:30", false));
         
-        requests.add(new Request("REQ-2025-120", "John Smith", "Skyline Tower", "Apt 305", "Information", "Lease Renewal Process", "open", "2025-11-05 09:30", "medium", messages1));
-        requests.add(new Request("REQ-2025-121", "Sarah Johnson", "Riverside Apartments", "Apt 205", "Document", "Request for Proof of Residence", "responded", "2025-11-04 14:20", "low", messages2));
-        requests.add(new Request("REQ-2025-122", "Mike Brown", "Garden View Complex", "Apt 312", "Complaint", "Noise Complaint - Neighboring Apartment", "in-progress", "2025-11-03 22:15", "high", messages3));
-        requests.add(new Request("REQ-2025-123", "Emma Davis", "Metro Heights", "Apt 405", "Maintenance", "Request for Additional Parking Space", "closed", "2025-10-28 11:00", "low", messages4));
+        requests.add(new Request("REQ-001", "Emma Davis", "Skyline Tower", "Apt 305", "Maintenance", "Water leak in bathroom", "responded", "2025-12-22 09:30", "High", messages1));
+        requests.add(new Request("REQ-002", "John Smith", "Garden View", "Apt 412", "Document Request", "Need lease agreement copy", "open", "2025-12-22 08:45", "Medium", messages2));
+        requests.add(new Request("REQ-003", "Sarah Wilson", "Metro Heights", "Apt 205", "Maintenance", "Elevator safety concern", "in-progress", "2025-12-21 16:20", "High", messages3));
+        requests.add(new Request("REQ-004", "Mike Johnson", "Riverside Plaza", "Apt 108", "Complaint", "Noise complaint - loud music", "open", "2025-12-20 22:30", "Medium", messages4));
+        
+        // Try to load from database as well
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String query = "SELECT cr.request_number, COALESCE(b.name, 'Unknown Buyer') as buyer_name, " +
+                          "COALESCE(bd.name, 'General') as building_name, " +
+                          "CASE WHEN cr.apartment_id IS NOT NULL THEN CONCAT('Apt ', a.apartment_number) ELSE 'General' END as apartment, " +
+                          "cr.request_type, cr.subject, cr.priority, cr.status, cr.created_at " +
+                          "FROM customer_requests cr " +
+                          "LEFT JOIN buyers b ON cr.buyer_id = b.id " +
+                          "LEFT JOIN buildings bd ON cr.building_id = bd.id " +
+                          "LEFT JOIN apartments a ON cr.apartment_id = a.id " +
+                          "ORDER BY cr.created_at DESC";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                
+                while (rs.next()) {
+                    List<Message> messages = loadMessagesForRequest(conn, rs.getInt("request_number"));
+                    
+                    Request request = new Request(
+                        rs.getString("request_number"),
+                        rs.getString("buyer_name"),
+                        rs.getString("building_name"),
+                        rs.getString("apartment"),
+                        rs.getString("request_type"),
+                        rs.getString("subject"),
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at").toString(),
+                        rs.getString("priority"),
+                        messages
+                    );
+                    requests.add(request);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Database not available, using sample data only");
+        }
+    }
+    
+    private List<Message> loadMessagesForRequest(Connection conn, int requestId) throws SQLException {
+        List<Message> messages = new ArrayList<>();
+        String query = "SELECT sender_name, message_text, is_staff_message, created_at " +
+                      "FROM request_messages WHERE request_id = ? ORDER BY created_at";
+        
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, requestId);
+            ResultSet rs = stmt.executeQuery();
+            
+            int messageId = 1;
+            while (rs.next()) {
+                Message message = new Message(
+                    messageId++,
+                    rs.getString("sender_name"),
+                    rs.getString("message_text"),
+                    rs.getTimestamp("created_at").toString(),
+                    rs.getBoolean("is_staff_message")
+                );
+                messages.add(message);
+            }
+        }
+        
+        return messages;
     }
     
     private void initPage() {
@@ -97,7 +164,7 @@ public class RequestsPage extends VBox {
         });
         
         addButton.setOnAction(e -> {
-            System.out.println("تم النقر على زر إضافة طلب جديد");
+            System.out.println("Opening new request dialog");
             showAddRequestDialog();
         });
         
@@ -206,7 +273,7 @@ public class RequestsPage extends VBox {
         }
         
         button.setOnAction(e -> {
-            System.out.println("تم النقر على تبويب: " + text);
+            System.out.println("Switching to tab: " + text);
             selectedTab = tabValue;
             updateTabStyles();
             updateRequestsList();
@@ -250,7 +317,7 @@ public class RequestsPage extends VBox {
         }
         
         card.setOnMouseClicked(e -> {
-            System.out.println("تم النقر على الطلب: " + request.subject);
+            System.out.println("Selected request: " + request.subject);
             selectedRequest = request;
             updateRequestsList();
             updateMessagesView();
@@ -369,7 +436,7 @@ public class RequestsPage extends VBox {
         });
         
         sendBtn.setOnAction(e -> {
-            System.out.println("تم النقر على زر الإرسال");
+            System.out.println("Sending reply");
             sendReply();
         });
         
@@ -389,10 +456,20 @@ public class RequestsPage extends VBox {
         });
         
         progressBtn.setOnAction(e -> {
-            System.out.println("تم النقر على زر قيد التنفيذ");
+            System.out.println("Marking request as in progress");
             if (selectedRequest != null) {
                 selectedRequest.status = "in-progress";
                 updateRequestsList();
+                updateMessagesView();
+                // Add system message
+                Message statusMessage = new Message(
+                    selectedRequest.messages.size() + 1,
+                    "System",
+                    "Request status updated to: In Progress",
+                    java.time.LocalDateTime.now().toString().substring(0, 16),
+                    true
+                );
+                selectedRequest.messages.add(statusMessage);
                 updateMessagesView();
             }
         });
@@ -409,10 +486,20 @@ public class RequestsPage extends VBox {
         });
         
         closeBtn.setOnAction(e -> {
-            System.out.println("تم النقر على زر إغلاق الطلب");
+            System.out.println("Closing request");
             if (selectedRequest != null) {
                 selectedRequest.status = "closed";
                 updateRequestsList();
+                updateMessagesView();
+                // Add system message
+                Message statusMessage = new Message(
+                    selectedRequest.messages.size() + 1,
+                    "System",
+                    "Request has been closed and marked as resolved.",
+                    java.time.LocalDateTime.now().toString().substring(0, 16),
+                    true
+                );
+                selectedRequest.messages.add(statusMessage);
                 updateMessagesView();
             }
         });
@@ -612,7 +699,7 @@ public class RequestsPage extends VBox {
         });
         
         cancelBtn.setOnAction(e -> {
-            System.out.println("تم النقر على زر الإلغاء");
+            System.out.println("Canceling new request dialog");
             dialog.close();
         });
         
@@ -628,7 +715,59 @@ public class RequestsPage extends VBox {
         });
         
         submitBtn.setOnAction(e -> {
-            System.out.println("تم النقر على زر إرسال الطلب");
+            System.out.println("Submitting new request");
+            // Validate required fields
+            if (fromField.getText().trim().isEmpty() || 
+                typeCombo.getValue() == null || 
+                subjectField.getText().trim().isEmpty() || 
+                messageArea.getText().trim().isEmpty()) {
+                
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Missing Information");
+                alert.setHeaderText("Please fill in all required fields");
+                alert.setContentText("From, Type, Subject, and Message are required fields.");
+                alert.showAndWait();
+                return;
+            }
+            
+            // Create new request
+            List<Message> newMessages = new ArrayList<>();
+            newMessages.add(new Message(
+                1,
+                fromField.getText().trim(),
+                messageArea.getText().trim(),
+                java.time.LocalDateTime.now().toString().substring(0, 16),
+                false
+            ));
+            
+            String requestId = "REQ-" + String.format("%03d", requests.size() + 1);
+            String building = buildingCombo.getValue() != null ? buildingCombo.getValue() : "General";
+            String apartment = apartmentField.getText().trim().isEmpty() ? "General" : apartmentField.getText().trim();
+            String priority = priorityCombo.getValue() != null ? priorityCombo.getValue() : "Medium";
+            
+            Request newRequest = new Request(
+                requestId,
+                fromField.getText().trim(),
+                building,
+                apartment,
+                typeCombo.getValue(),
+                subjectField.getText().trim(),
+                "open",
+                java.time.LocalDateTime.now().toString().substring(0, 16),
+                priority,
+                newMessages
+            );
+            
+            requests.add(0, newRequest); // Add to beginning of list
+            updateRequestsList();
+            
+            // Show success message
+            Alert success = new Alert(Alert.AlertType.INFORMATION);
+            success.setTitle("Request Created");
+            success.setHeaderText("Request submitted successfully!");
+            success.setContentText("Request ID: " + requestId + "\nYou can track its progress in the requests list.");
+            success.showAndWait();
+            
             dialog.close();
         });
         

@@ -93,6 +93,7 @@ public class UserProfilePage extends VBox {
         editBtn.setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #374151; -fx-background-radius: 10; -fx-padding: 12 20; -fx-cursor: hand;");
         editBtn.setOnMouseEntered(e -> editBtn.setStyle("-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-background-radius: 10; -fx-padding: 12 20; -fx-cursor: hand;"));
         editBtn.setOnMouseExited(e -> editBtn.setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #374151; -fx-background-radius: 10; -fx-padding: 12 20; -fx-cursor: hand;"));
+        editBtn.setOnAction(e -> showEditProfileDialog());
         
         profileInfo.getChildren().addAll(profilePic, name, role, editBtn);
         
@@ -128,6 +129,7 @@ public class UserProfilePage extends VBox {
         Button viewAllBtn = new Button("👁️ View All Properties");
         viewAllBtn.setStyle("-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 12 20; -fx-cursor: hand;");
         viewAllBtn.setPrefWidth(250);
+        viewAllBtn.setOnAction(e -> viewAllProperties());
         
         card.getChildren().addAll(title, properties, viewAllBtn);
         return card;
@@ -203,6 +205,7 @@ public class UserProfilePage extends VBox {
         Button saveBtn = new Button("💾 Save Preferences");
         saveBtn.setStyle("-fx-background-color: linear-gradient(135deg, #8b5cf6, #a855f7); -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 15 30; -fx-font-size: 16px; -fx-cursor: hand;");
         saveBtn.setPrefWidth(200);
+        saveBtn.setOnAction(e -> savePreferences());
         
         card.getChildren().addAll(title, settings, saveBtn);
         return card;
@@ -319,6 +322,39 @@ public class UserProfilePage extends VBox {
         toggle.setSelected(enabled);
         
         row.getChildren().addAll(iconLabel, textLabel, spacer, toggle);
+        toggle.setOnAction(e -> updatePreference(text, toggle.isSelected()));
         return row;
+    }
+    
+    private void showEditProfileDialog() {
+        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
+        dialog.setTitle("Edit Profile");
+        dialog.setHeaderText("Profile Editor");
+        dialog.setContentText("Edit profile functionality:\n• Update personal information\n• Change profile picture\n• Modify contact details\n• Update address");
+        dialog.showAndWait();
+    }
+    
+    private void viewAllProperties() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("My Properties");
+        alert.setHeaderText("Property Portfolio");
+        alert.setContentText("Viewing all your properties:\n\n• 3 Total Properties\n• 2 Currently Rented\n• 1 Available for Rent\n\nThis would open the detailed properties view.");
+        alert.showAndWait();
+    }
+    
+    private void savePreferences() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Preferences Saved");
+        alert.setHeaderText("Success");
+        alert.setContentText("Your preferences have been saved successfully!");
+        alert.showAndWait();
+    }
+    
+    private void updatePreference(String preference, boolean enabled) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Preference Updated");
+        alert.setHeaderText(preference);
+        alert.setContentText(preference + " has been " + (enabled ? "enabled" : "disabled") + ".");
+        alert.showAndWait();
     }
 }

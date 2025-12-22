@@ -11,6 +11,10 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,21 +31,47 @@ public class MaintenancePage extends VBox {
     
     private void initRequests() {
         requests = new ArrayList<>();
-        requests.add(new MaintenanceRequest("MNT-2025-045", "Skyline Tower", "Apt 305", "John Smith", 
-            "Leaking pipe in bathroom", "Water dripping from ceiling pipe, needs immediate attention", 
-            "high", "pending", "2025-11-04", 3500, null, null));
-        requests.add(new MaintenanceRequest("MNT-2025-046", "Riverside Apartments", "Apt 205", "Sarah Johnson", 
-            "Air conditioning not working", "AC unit making loud noise and not cooling properly", 
-            "medium", "in-progress", "2025-11-03", 5000, "Mike Torres", null));
-        requests.add(new MaintenanceRequest("MNT-2025-047", "Garden View Complex", "Lobby", "Property Manager", 
-            "Elevator maintenance", "Routine elevator inspection and maintenance required", 
-            "medium", "completed", "2025-10-28", 12000, "TechLift Services", "2025-11-01"));
-        requests.add(new MaintenanceRequest("MNT-2025-048", "Metro Heights", "Apt 410", "Emma Davis", 
-            "Electrical outlet not working", "Kitchen outlet stopped working, need electrician", 
-            "low", "pending", "2025-11-02", 1500, null, null));
-        requests.add(new MaintenanceRequest("MNT-2025-049", "Skyline Tower", "Parking Lot", "Security Staff", 
-            "Broken gate motor", "Parking gate motor malfunctioning, manual operation required", 
-            "high", "in-progress", "2025-11-05", 8000, "AutoGate Systems", null));
+        loadMaintenanceRequestsFromDatabase();
+    }
+    
+    private void loadMaintenanceRequestsFromDatabase() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String query = "SELECT mr.request_number, b.name as building_name, " +
+                          "CASE WHEN mr.apartment_id IS NOT NULL THEN CONCAT('Apt ', a.apartment_number) ELSE 'Common Area' END as location, " +
+                          "mr.requested_by, mr.issue_title, mr.description, mr.priority, mr.status, " +
+                          "mr.request_date, mr.estimated_cost, mr.assigned_to, mr.completion_date " +
+                          "FROM maintenance_requests mr " +
+                          "JOIN buildings b ON mr.building_id = b.id " +
+                          "LEFT JOIN apartments a ON mr.apartment_id = a.id " +
+                          "ORDER BY mr.request_date DESC";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                
+                while (rs.next()) {
+                    String completedDate = rs.getDate("completion_date") != null ? 
+                                         rs.getDate("completion_date").toString() : null;
+                    
+                    MaintenanceRequest request = new MaintenanceRequest(
+                        rs.getString("request_number"),
+                        rs.getString("building_name"),
+                        rs.getString("location"),
+                        rs.getString("requested_by"),
+                        rs.getString("issue_title"),
+                        rs.getString("description"),
+                        rs.getString("priority"),
+                        rs.getString("status"),
+                        rs.getDate("request_date").toString(),
+                        rs.getInt("estimated_cost"),
+                        rs.getString("assigned_to"),
+                        completedDate
+                    );
+                    requests.add(request);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     private void initPage() {
