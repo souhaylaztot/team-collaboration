@@ -1,0 +1,221 @@
+/* Global CSS for Property Management Application - Light Theme */
+
+/* Root Application Styles */
+.root {
+    -fx-background-color: #F8FAFC;
+    -fx-text-fill: #000000;
+}
+
+/* Page Title Styles */
+.page-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+    -fx-font-family: "System";
+}
+
+.page-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6B7280;
+    -fx-font-family: "System";
+}
+
+/* Light Theme Base Styles */
+.light-theme {
+    -fx-background-color: #F8FAFC;
+}
+
+.light-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: #E5E7EB;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 3);
+}
+
+/* Main Content Areas */
+.main-content {
+    -fx-background-color: #F8FAFC;
+    -fx-text-fill: #000000;
+}
+
+.content-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12px;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 3);
+}
+
+/* Button Styles */
+.primary-button {
+    -fx-background-color: linear-gradient(to right, #2C3E8C, #4FD1C5);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24;
+    -fx-background-radius: 8px;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #D1D5DB;
+    -fx-border-radius: 6px;
+    -fx-text-fill: #000000;
+    -fx-padding: 12 16;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+/* Status Badge Styles - Fixed Colors */
+.status-badge-paid {
+    -fx-background-color: #D1FAE5;
+    -fx-text-fill: #065F46;
+    -fx-padding: 4px 8px;
+    -fx-background-radius: 12px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.status-badge-partial {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #92400E;
+    -fx-padding: 4px 8px;
+    -fx-background-radius: 12px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.status-badge-overdue {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #991B1B;
+    -fx-padding: 4px 8px;
+    -fx-background-radius: 12px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Statistics Card Styles - Light Theme */
+.stat-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 3);
+    -fx-padding: 24px;
+}
+
+.stat-number {
+    -fx-text-fill: #000000;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.stat-label {
+    -fx-text-fill: #6B7280;
+    -fx-font-size: 14px;
+}
+
+/* Input Field Styles - Light Theme */
+.search-field {
+    -fx-padding: 8px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-border-color: #E5E7EB;
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+}
+
+/* Table Styles - Light Theme */
+.table-view {
+    -fx-font-size: 13px;
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+}
+
+.table-view .column-header {
+    -fx-background-color: #F9FAFB;
+    -fx-text-fill: #111827;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #111827;
+    -fx-border-color: #E5E7EB;
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #EBF8FF;
+    -fx-text-fill: #000000;
+}
+
+/* Action Button Styles */
+.action-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #D1D5DB;
+    -fx-border-radius: 4px;
+    -fx-min-width: 32px;
+    -fx-min-height: 32px;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.action-button-danger {
+    -fx-background-color: transparent;
+    -fx-border-color: #D1D5DB;
+    -fx-border-radius: 4px;
+    -fx-text-fill: #DC2626;
+    -fx-min-width: 32px;
+    -fx-min-height: 32px;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+/* Tab Pane Styles */
+.tab-pane {
+    -fx-font-size: 13px;
+}
+
+.tab-pane .tab {
+    -fx-background-color: #F9FAFB;
+    -fx-text-fill: #6B7280;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: white;
+    -fx-text-fill: #2C3E8C;
+}
+
+/* Gradient Icon Backgrounds */
+.icon-success {
+    -fx-background-color: linear-gradient(to bottom right, #10B981, #059669);
+    -fx-background-radius: 12px;
+}
+
+.icon-warning {
+    -fx-background-color: linear-gradient(to bottom right, #F59E0B, #D97706);
+    -fx-background-radius: 12px;
+}
+
+.icon-danger {
+    -fx-background-color: linear-gradient(to bottom right, #EF4444, #DC2626);
+    -fx-background-radius: 12px;
+}
+
+.icon-info {
+    -fx-background-color: linear-gradient(to bottom right, #3B82F6, #2563EB);
+    -fx-background-radius: 12px;
+}
+
+/* Icon Text */
+.icon-text {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+}
