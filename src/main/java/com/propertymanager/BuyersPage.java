@@ -52,67 +52,37 @@ public class BuyersPage extends VBox {
     }
     
     private void loadBuyersFromDatabase() {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            String query = "SELECT b.id, b.name, b.phone, b.email, b.purchase_date, " +
-                          "b.purchase_amount, b.paid_amount, b.remaining_amount, b.payment_status, " +
-                          "b.last_payment_date, b.next_due_date, " +
-                          "CONCAT(bd.name, ' - ', a.apartment_number) as property " +
-                          "FROM buyers b " +
-                          "LEFT JOIN property_purchases pp ON b.id = pp.buyer_id " +
-                          "LEFT JOIN apartments a ON pp.apartment_id = a.id " +
-                          "LEFT JOIN buildings bd ON a.building_id = bd.id " +
-                          "ORDER BY b.name";
-            
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                ResultSet rs = stmt.executeQuery();
-                
-                while (rs.next()) {
-                    String lastPayment = rs.getDate("last_payment_date") != null ? 
-                                       rs.getDate("last_payment_date").toString() : "N/A";
-                    String nextDue = rs.getDate("next_due_date") != null ? 
-                                   rs.getDate("next_due_date").toString() : "N/A";
-                    
-                    Buyer buyer = new Buyer(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("property") != null ? rs.getString("property") : "No Property",
-                        rs.getString("phone"),
-                        rs.getString("email"),
-                        rs.getDate("purchase_date").toString(),
-                        (int) rs.getLong("purchase_amount"),
-                        (int) rs.getLong("paid_amount"),
-                        (int) rs.getLong("remaining_amount"),
-                        rs.getString("payment_status"),
-                        lastPayment,
-                        nextDue
-                    );
-                    buyers.add(buyer);
-                }
-            }
+        try {
+            // Use the new DAO to load buyers
+            buyers.clear();
+            buyers.addAll(BuyerDAO.getAllBuyers());
             
             // Update payment statistics
-            updatePaymentStatistics(conn);
+            updatePaymentStatistics();
             
-        } catch (SQLException e) {
+            System.out.println("👥 Successfully loaded " + buyers.size() + " buyers from database");
+            
+        } catch (Exception e) {
             e.printStackTrace();
             showError("Database Error", "Failed to load buyers from database: " + e.getMessage());
         }
     }
     
-    private void updatePaymentStatistics(Connection conn) throws SQLException {
-        String statsQuery = "SELECT " +
-                           "SUM(paid_amount) as total_collected, " +
-                           "SUM(CASE WHEN payment_status = 'partial' OR payment_status = 'pending' THEN remaining_amount ELSE 0 END) as pending, " +
-                           "SUM(CASE WHEN payment_status = 'overdue' THEN remaining_amount ELSE 0 END) as overdue " +
-                           "FROM buyers";
-        
-        try (PreparedStatement stmt = conn.prepareStatement(statsQuery)) {
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                totalCollected = rs.getLong("total_collected");
-                pending = rs.getLong("pending");
-                overdue = rs.getLong("overdue");
-            }
+    private void updatePaymentStatistics() {
+        try {
+            totalCollected = (long) BuyerDAO.getTotalRevenue();
+            pending = (long) BuyerDAO.getPendingPayments();
+            
+            // Calculate overdue separately
+            overdue = buyers.stream()
+                .filter(buyer -> "overdue".equals(buyer.getPaymentStatus()))
+                .mapToLong(buyer -> buyer.getRemainingAmount())
+                .sum();
+                
+            System.out.println("📊 Payment statistics updated - Collected: " + totalCollected + ", Pending: " + pending + ", Overdue: " + overdue);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error updating payment statistics: " + e.getMessage());
         }
     }
 

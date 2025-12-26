@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-12-22T14:00:00.000Z" agent="5.0" etag="state-diagram" version="24.7.17">
+  <diagram name="Smart Property Manager - State Transition Diagram" id="state-main">
+    <mxGraphModel dx="1422" dy="754" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Smart Property Manager - Diagramme d'État de Transition" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="600" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Initial State -->
+        <mxCell id="initial" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="30" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Application States -->
+        <mxCell id="loading" value="Chargement&#xa;Application" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="150" y="70" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="login" value="Écran de&#xa;Connexion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="350" y="70" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="authenticating" value="Authentification&#xa;en cours" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="70" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="dashboard" value="Tableau de Bord&#xa;Principal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="750" y="70" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Navigation States -->
+        <mxCell id="buildings" value="Gestion&#xa;Bâtiments" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="150" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="buyers" value="Gestion&#xa;Acheteurs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="350" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="requests" value="Centre de&#xa;Demandes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="settings" value="Paramètres&#xa;Système" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="750" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="reports" value="Rapports et&#xa;Analyses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="950" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Sub-states for Buildings -->
+        <mxCell id="building_list" value="Liste des&#xa;Bâtiments" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="50" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="building_add" value="Ajouter&#xa;Bâtiment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="180" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="building_edit" value="Modifier&#xa;Bâtiment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="310" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Sub-states for Requests -->
+        <mxCell id="request_list" value="Liste des&#xa;Demandes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6d0de;strokeColor=#996185;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="450" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="request_view" value="Voir&#xa;Demande" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6d0de;strokeColor=#996185;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="580" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="request_reply" value="Répondre à&#xa;Demande" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6d0de;strokeColor=#996185;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="710" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Settings Sub-states -->
+        <mxCell id="profile_edit" value="Modifier&#xa;Profil" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="850" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="language_change" value="Changer&#xa;Langue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="980" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="theme_toggle" value="Basculer&#xa;Thème" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1110" y="330" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Notification States -->
+        <mxCell id="notification_popup" value="Popup&#xa;Notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="150" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="notification_read" value="Marquer&#xa;comme Lu" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="280" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Backup States -->
+        <mxCell id="backup_dialog" value="Dialog&#xa;Sauvegarde" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="450" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="backup_progress" value="Sauvegarde&#xa;en Cours" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="580" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="backup_complete" value="Sauvegarde&#xa;Terminée" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="710" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Error States -->
+        <mxCell id="error_auth" value="Erreur&#xa;Authentification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="850" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="error_network" value="Erreur&#xa;Réseau" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="980" y="460" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Logout State -->
+        <mxCell id="logout" value="Déconnexion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="590" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Final State -->
+        <mxCell id="final" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="750" y="600" width="30" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Transitions -->
+        
+        <!-- Initial flow -->
+        <mxCell id="t1" value="Démarrage" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="initial" target="loading">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="80" y="95" as="sourcePoint" />
+            <mxPoint x="150" y="95" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t2" value="Chargement terminé" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="loading" target="login">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="270" y="95" as="sourcePoint" />
+            <mxPoint x="350" y="95" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t3" value="Saisie identifiants" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="login" target="authenticating">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="470" y="95" as="sourcePoint" />
+            <mxPoint x="550" y="95" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t4" value="Authentification réussie" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="authenticating" target="dashboard">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="670" y="95" as="sourcePoint" />
+            <mxPoint x="750" y="95" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Navigation transitions -->
+        <mxCell id="t5" value="Menu Bâtiments" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="buildings">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="750" y="120" as="sourcePoint" />
+            <mxPoint x="270" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t6" value="Menu Acheteurs" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="buyers">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="810" y="120" as="sourcePoint" />
+            <mxPoint x="410" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t7" value="Menu Demandes" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="requests">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="810" y="120" as="sourcePoint" />
+            <mxPoint x="610" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t8" value="Menu Paramètres" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="settings">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="810" y="120" as="sourcePoint" />
+            <mxPoint x="810" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t9" value="Menu Rapports" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="reports">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="870" y="120" as="sourcePoint" />
+            <mxPoint x="1010" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Return to dashboard -->
+        <mxCell id="t10" value="Retour" style="endArrow=block;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="buildings" target="dashboard">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="270" y="200" as="sourcePoint" />
+            <mxPoint x="750" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t11" value="Retour" style="endArrow=block;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="buyers" target="dashboard">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="410" y="200" as="sourcePoint" />
+            <mxPoint x="750" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t12" value="Retour" style="endArrow=block;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="requests" target="dashboard">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="610" y="200" as="sourcePoint" />
+            <mxPoint x="750" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Sub-state transitions for Buildings -->
+        <mxCell id="t13" value="Afficher liste" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="buildings" target="building_list">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="210" y="250" as="sourcePoint" />
+            <mxPoint x="100" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t14" value="Nouveau" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="building_list" target="building_add">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="150" y="350" as="sourcePoint" />
+            <mxPoint x="180" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t15" value="Modifier" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="building_list" target="building_edit">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="150" y="350" as="sourcePoint" />
+            <mxPoint x="310" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Sub-state transitions for Requests -->
+        <mxCell id="t16" value="Afficher liste" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="requests" target="request_list">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="610" y="250" as="sourcePoint" />
+            <mxPoint x="500" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t17" value="Sélectionner" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="request_list" target="request_view">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="550" y="350" as="sourcePoint" />
+            <mxPoint x="580" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t18" value="Répondre" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="request_view" target="request_reply">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="680" y="350" as="sourcePoint" />
+            <mxPoint x="710" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Settings sub-states -->
+        <mxCell id="t19" value="Modifier profil" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="settings" target="profile_edit">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="810" y="250" as="sourcePoint" />
+            <mxPoint x="900" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t20" value="Changer langue" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="settings" target="language_change">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="870" y="250" as="sourcePoint" />
+            <mxPoint x="1030" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t21" value="Basculer thème" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="settings" target="theme_toggle">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="870" y="250" as="sourcePoint" />
+            <mxPoint x="1160" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Notification flow -->
+        <mxCell id="t22" value="Notification reçue" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="notification_popup">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="750" y="120" as="sourcePoint" />
+            <mxPoint x="200" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t23" value="Marquer lu" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="notification_popup" target="notification_read">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="250" y="480" as="sourcePoint" />
+            <mxPoint x="280" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Backup flow -->
+        <mxCell id="t24" value="Ouvrir sauvegarde" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="settings" target="backup_dialog">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="750" y="250" as="sourcePoint" />
+            <mxPoint x="500" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t25" value="Démarrer sauvegarde" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="backup_dialog" target="backup_progress">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="550" y="480" as="sourcePoint" />
+            <mxPoint x="580" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t26" value="Sauvegarde terminée" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="backup_progress" target="backup_complete">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="680" y="480" as="sourcePoint" />
+            <mxPoint x="710" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Error transitions -->
+        <mxCell id="t27" value="Échec authentification" style="endArrow=block;html=1;rounded=0;strokeColor=#ff0000;" edge="1" parent="1" source="authenticating" target="error_auth">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="610" y="120" as="sourcePoint" />
+            <mxPoint x="900" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t28" value="Erreur réseau" style="endArrow=block;html=1;rounded=0;strokeColor=#ff0000;" edge="1" parent="1" source="dashboard" target="error_network">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="870" y="120" as="sourcePoint" />
+            <mxPoint x="1030" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t29" value="Réessayer" style="endArrow=block;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="error_auth" target="login">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="850" y="460" as="sourcePoint" />
+            <mxPoint x="470" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Logout flow -->
+        <mxCell id="t30" value="Déconnexion" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="dashboard" target="logout">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="810" y="120" as="sourcePoint" />
+            <mxPoint x="610" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="t31" value="Fermer application" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="logout" target="final">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="670" y="615" as="sourcePoint" />
+            <mxPoint x="750" y="615" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend" value="Légende des États:&#xa;🟡 États de démarrage&#xa;🟣 États d'authentification&#xa;🟢 États principaux&#xa;🔵 États de navigation&#xa;🟠 États de sous-modules&#xa;🔴 États d'erreur&#xa;⚪ États utilitaires" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;size=20;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="700" width="250" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transitions_note" value="Types de Transitions:&#xa;→ Transition normale&#xa;⇢ Transition de retour&#xa;→ Transition d'erreur (rouge)&#xa;⇢ Transition de récupération (pointillé)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#e1d5e7;strokeColor=#9673a6;size=20;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="700" width="250" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="states_note" value="États Principaux:&#xa;• Chargement → Connexion → Dashboard&#xa;• Navigation entre modules&#xa;• Gestion des erreurs&#xa;• Notifications temps réel&#xa;• Sauvegarde/Restauration&#xa;• Déconnexion sécurisée" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#d5e8d4;strokeColor=#82b366;size=20;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="700" width="250" height="150" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

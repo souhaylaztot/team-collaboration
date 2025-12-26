@@ -1,0 +1,211 @@
+<mxfile host="65bd71144e">
+    <diagram name="Smart Property Manager - Use Case Diagram" id="use-case-main">
+        <mxGraphModel dx="1174" dy="804" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Smart Property Manager - Diagramme de Cas d&#39;Utilisation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="300" y="20" width="569" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="system" value="Smart Property Manager System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;strokeWidth=2;dashed=1;fontSize=14;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="200" y="80" width="800" height="700" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin" value="Administrateur" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="150" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" value="Utilisateur" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="300" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="tenant" value="Locataire" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="450" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_external" value="Système Externe" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="400" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_login" value="Se connecter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_logout" value="Se déconnecter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_create_account" value="Créer un compte" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_buildings" value="Gérer les bâtiments" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="220" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_apartments" value="Gérer les appartements" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="220" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_lands" value="Gérer les terrains" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="220" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_view_properties" value="Consulter les propriétés" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="220" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_buyers" value="Gérer les acheteurs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="320" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_track_payments" value="Suivre les paiements" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="320" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_permits" value="Gérer les permis" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="320" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_legal_docs" value="Gérer documents légaux" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="320" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_maintenance" value="Gérer la maintenance" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="420" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_request_maintenance" value="Demander maintenance" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="420" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_requests" value="Gérer les demandes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="420" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_submit_request" value="Soumettre demande" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="420" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_generate_reports" value="Générer rapports" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="520" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_view_analytics" value="Consulter analyses" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="520" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_export_data" value="Exporter données" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="520" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_manage_settings" value="Gérer paramètres" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="520" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_backup_restore" value="Sauvegarde/Restauration" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="620" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_user_management" value="Gestion utilisateurs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="620" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_notifications" value="Gérer notifications" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="620" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_language" value="Changer langue" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="620" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_transportation" value="Gérer transport" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="850" y="420" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_payment_gateway" value="Intégration paiement" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="850" y="320" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_email_service" value="Service email" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="850" y="520" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc1" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="admin" target="uc_login" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="180" as="sourcePoint"/>
+                        <mxPoint x="250" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc2" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="admin" target="uc_manage_buildings" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="180" as="sourcePoint"/>
+                        <mxPoint x="250" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc3" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="admin" target="uc_manage_buyers" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="180" as="sourcePoint"/>
+                        <mxPoint x="250" y="350" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc4" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="admin" target="uc_generate_reports" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="180" as="sourcePoint"/>
+                        <mxPoint x="250" y="550" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc5" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="admin" target="uc_backup_restore" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="180" as="sourcePoint"/>
+                        <mxPoint x="250" y="650" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc6" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="user" target="uc_login" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="330" as="sourcePoint"/>
+                        <mxPoint x="250" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc7" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="user" target="uc_view_properties" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="330" as="sourcePoint"/>
+                        <mxPoint x="700" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc8" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="user" target="uc_view_analytics" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="330" as="sourcePoint"/>
+                        <mxPoint x="400" y="550" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc9" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="tenant" target="uc_request_maintenance" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="480" as="sourcePoint"/>
+                        <mxPoint x="400" y="450" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc10" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="tenant" target="uc_submit_request" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="480" as="sourcePoint"/>
+                        <mxPoint x="700" y="450" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc11" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="tenant" target="uc_track_payments" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="480" as="sourcePoint"/>
+                        <mxPoint x="400" y="350" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc12" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="system_external" target="uc_payment_gateway" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1080" y="430" as="sourcePoint"/>
+                        <mxPoint x="970" y="350" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc13" value="" style="endArrow=none;html=1;rounded=0;" parent="1" source="system_external" target="uc_email_service" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1080" y="430" as="sourcePoint"/>
+                        <mxPoint x="970" y="550" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="include1" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="uc_manage_buildings" target="uc_manage_apartments" edge="1">
+                    <mxGeometry width="160" relative="1" as="geometry">
+                        <mxPoint x="370" y="250" as="sourcePoint"/>
+                        <mxPoint x="400" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="include2" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="uc_track_payments" target="uc_payment_gateway" edge="1">
+                    <mxGeometry width="160" relative="1" as="geometry">
+                        <mxPoint x="520" y="350" as="sourcePoint"/>
+                        <mxPoint x="850" y="350" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="include3" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="uc_notifications" target="uc_email_service" edge="1">
+                    <mxGeometry width="160" relative="1" as="geometry">
+                        <mxPoint x="670" y="650" as="sourcePoint"/>
+                        <mxPoint x="850" y="550" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="extend1" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="uc_create_account" target="uc_login" edge="1">
+                    <mxGeometry width="160" relative="1" as="geometry">
+                        <mxPoint x="550" y="150" as="sourcePoint"/>
+                        <mxPoint x="370" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="legend" value="Légende:&#xa;🔵 Cas d&#39;utilisation Admin&#xa;🟢 Cas d&#39;utilisation Utilisateur&#xa;🟡 Cas d&#39;utilisation Locataire&#xa;🔴 Intégrations externes&#xa;⚪ Cas d&#39;utilisation communs" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;size=20;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="600" width="200" height="150" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

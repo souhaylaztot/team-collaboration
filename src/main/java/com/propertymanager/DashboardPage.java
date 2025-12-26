@@ -44,47 +44,22 @@ public class DashboardPage extends VBox {
     }
     
     private void loadDataFromDatabase() {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            // Load building stats
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM buildings")) {
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) totalBuildings = rs.getInt(1);
-            }
+        try {
+            // Use the new DAO classes to load statistics
+            totalBuildings = BuildingDAO.getTotalBuildings();
+            totalApartments = BuildingDAO.getTotalApartments();
+            soldApartments = BuildingDAO.getOccupiedApartments();
+            availableApartments = totalApartments - soldApartments;
             
-            // Load apartment stats
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM apartments")) {
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) totalApartments = rs.getInt(1);
-            }
+            totalBuyers = BuyerDAO.getTotalBuyers();
+            totalLands = LandDAO.getTotalLands();
             
-            // Load buyer stats
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM buyers")) {
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) totalBuyers = rs.getInt(1);
-            }
+            System.out.println("📊 Dashboard statistics loaded successfully!");
+            System.out.println("Buildings: " + totalBuildings + ", Apartments: " + totalApartments + ", Buyers: " + totalBuyers + ", Lands: " + totalLands);
             
-            // Load land stats
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM lands")) {
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) totalLands = rs.getInt(1);
-            }
-            
-            // Load occupancy stats
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT status, COUNT(*) FROM apartments GROUP BY status")) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    String status = rs.getString(1);
-                    int count = rs.getInt(2);
-                    if ("sold".equals(status)) {
-                        soldApartments = count;
-                    } else if ("available".equals(status)) {
-                        availableApartments = count;
-                    }
-                }
-            }
-            
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            System.err.println("❌ Error loading dashboard data, using default values");
             // Use default values if database fails
             totalBuildings = 6;
             totalApartments = 240;

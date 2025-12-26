@@ -43,58 +43,52 @@ public class BuildingsPage extends ScrollPane {
     }
     
     private void loadBuildingsFromDatabase() {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            // Load buildings
-            String buildingQuery = "SELECT id, name, location, floors, total_apartments, occupied_apartments, status, description FROM buildings ORDER BY name";
-            try (PreparedStatement stmt = conn.prepareStatement(buildingQuery)) {
-                ResultSet rs = stmt.executeQuery();
-                
-                while (rs.next()) {
-                    Building building = new Building(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("location"),
-                        rs.getInt("floors"),
-                        rs.getInt("total_apartments"),
-                        rs.getInt("occupied_apartments"),
-                        rs.getString("status")
-                    );
-                    
-                    // Load apartments for this building
-                    loadApartmentsForBuilding(conn, building);
-                    buildings.add(building);
-                }
+        try {
+            // Use the new DAO to load buildings
+            buildings.clear();
+            buildings.addAll(BuildingDAO.getAllBuildings());
+            
+            // Load apartments for each building
+            for (Building building : buildings) {
+                loadApartmentsForBuilding(building);
             }
-        } catch (SQLException e) {
+            
+            System.out.println("✅ Successfully loaded " + buildings.size() + " buildings with apartments");
+            
+        } catch (Exception e) {
             e.printStackTrace();
             showError("Database Error", "Failed to load buildings from database: " + e.getMessage());
         }
     }
     
-    private void loadApartmentsForBuilding(Connection conn, Building building) throws SQLException {
-        String apartmentQuery = "SELECT a.apartment_number, a.floor, a.size, a.bedrooms, a.price, a.status, " +
-                               "COALESCE(b.name, '-') as buyer_name " +
-                               "FROM apartments a " +
-                               "LEFT JOIN property_purchases pp ON a.id = pp.apartment_id " +
-                               "LEFT JOIN buyers b ON pp.buyer_id = b.id " +
-                               "WHERE a.building_id = ? ORDER BY a.floor, a.apartment_number";
-        
-        try (PreparedStatement stmt = conn.prepareStatement(apartmentQuery)) {
-            stmt.setInt(1, building.id);
-            ResultSet rs = stmt.executeQuery();
+    private void loadApartmentsForBuilding(Building building) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String apartmentQuery = "SELECT a.apartment_number, a.floor, a.size, a.bedrooms, a.price, a.status, " +
+                                   "COALESCE(b.name, '-') as buyer_name " +
+                                   "FROM apartments a " +
+                                   "LEFT JOIN property_purchases pp ON a.id = pp.apartment_id " +
+                                   "LEFT JOIN buyers b ON pp.buyer_id = b.id " +
+                                   "WHERE a.building_id = ? ORDER BY a.floor, a.apartment_number";
             
-            while (rs.next()) {
-                Apartment apartment = new Apartment(
-                    rs.getString("apartment_number"),
-                    rs.getInt("floor"),
-                    rs.getString("size"),
-                    rs.getInt("bedrooms"),
-                    rs.getDouble("price"),
-                    rs.getString("status"),
-                    rs.getString("buyer_name")
-                );
-                building.apartments.add(apartment);
+            try (PreparedStatement stmt = conn.prepareStatement(apartmentQuery)) {
+                stmt.setInt(1, building.id);
+                ResultSet rs = stmt.executeQuery();
+                
+                while (rs.next()) {
+                    Apartment apartment = new Apartment(
+                        rs.getString("apartment_number"),
+                        rs.getInt("floor"),
+                        rs.getString("size"),
+                        rs.getInt("bedrooms"),
+                        rs.getDouble("price"),
+                        rs.getString("status"),
+                        rs.getString("buyer_name")
+                    );
+                    building.apartments.add(apartment);
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("❌ Error loading apartments for building " + building.name + ": " + e.getMessage());
         }
     }
     
@@ -864,7 +858,6 @@ public class BuildingsPage extends ScrollPane {
                 // Save to database
                 if (saveBuildingToDatabase(name, location, floors, totalApartments)) {
                     // Reload buildings from database to get the new ID
-                    buildings.clear();
                     loadBuildingsFromDatabase();
                     filteredBuildings.clear();
                     filteredBuildings.addAll(buildings);
